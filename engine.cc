@@ -16,6 +16,7 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
     std::string type;
     img::EasyImage image;
     type = configuration["General"]["type"].as_string_or_die();
+    //maybe merge all intro functions in a parser;
     if (type == "IntroColorRectangle"){
         int w = configuration["ImageProperties"]["width"].as_int_or_die();
         int h = configuration["ImageProperties"]["height"].as_int_or_die();
@@ -33,6 +34,7 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
         bool invert = configuration["BlockProperties"]["invertColors"].as_bool_or_default(false);
         image = Blocks(w,h,nrXBlocks,nrYBlocks,colWhite, colBlack,invert);
     }
+
     else if (type == "IntroLines"){
         int w = configuration["ImageProperties"]["width"].as_int_or_die();
         int h = configuration["ImageProperties"]["height"].as_int_or_die();
@@ -52,6 +54,7 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
         LParser::LSystem2D system = getLSystem2D(filename);
         image = drawLSystem2D(system, BackColor, color, size, rainbow);
     }
+
     else if (type == "Wireframe"){
         WireFrameParser parser(configuration);
         image = parser.getImage();

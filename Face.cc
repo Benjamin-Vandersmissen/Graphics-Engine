@@ -4,10 +4,4 @@
 
 #include "Face.hh"
 
-Face::Face(const std::vector<int> &pointIndices) : pointIndices(pointIndices) {}
 
-Face::Face() {}
-
-const std::vector<int> &Face::getPointIndices() const {
-    return pointIndices;
-}

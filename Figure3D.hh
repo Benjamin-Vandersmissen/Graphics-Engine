@@ -8,9 +8,20 @@
 #include <vector> //std vector
 #include "vector.hh" //custom vector
 #include "easy_image.hh"
-#include "Face.hh"
 #include "Line2D.hh"
 #include <cmath>
+
+class Face {
+private:
+    std::vector<int> pointIndices;
+public:
+    Face();
+
+    Face(const std::vector<int> &pointIndices);
+
+    const std::vector<int> &getPointIndices() const;
+};
+
 
 class Figure3D {
 private:

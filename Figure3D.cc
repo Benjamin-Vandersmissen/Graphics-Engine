@@ -4,6 +4,7 @@
 
 #include "Figure3D.hh"
 
+//transformation functions
 Matrix scaleFigure(const double scale) {
     Matrix matrix;
     matrix(1,1) = scale;
@@ -53,17 +54,14 @@ void applyTransformation(Figures3D &figures, Matrix &matrix) {
     }
 }
 
-std::ostream &operator<<(std::ostream &stream, Figure3D& figure) {
-    for(Face face : figure.getFaces()) {
-        for (int i = 0; i < face.getPointIndices().size(); i++) {
-            stream << figure.getPoints()[face.getPointIndices()[i]];
-            stream << "->";
-            stream << figure.getPoints()[face.getPointIndices()[(i+1)%face.getPointIndices().size()]] << std::endl;
-        }
+void Figure3D::applyTransformation(Matrix &matrix) {
+    for(Vector3D& point : this->Points){
+        point *= matrix;
     }
-    return stream;
 }
 
+
+//projection functions
 Lines2D doProjection(const Figures3D &figures) {
     Lines2D lines;
     for(const Figure3D& figure : figures){
@@ -73,12 +71,15 @@ Lines2D doProjection(const Figures3D &figures) {
             points.push_back(newpoint);
         }
         for(const Face face: figure.getFaces()){
-//            for(int i = 0; i < face.getPointIndices().size(); i++){
+            for(int i = 0; i < face.getPointIndices().size(); i++){
+                //connect all points from the face
                 int size = face.getPointIndices().size();
-                int i = 0;
                 Line2D line(points[face.getPointIndices()[i]], points[face.getPointIndices()[(i+1)%size]], figure.getColor());
                 lines.push_back(line);
-//            }
+                if (size == 2){ //otherwise, it will draw the same line twice
+                    break;
+                }
+            }
         }
     }
     return lines;
@@ -88,14 +89,19 @@ Point2D doProjection(const Vector3D &point, const double d) {
     return Point2D(d*point.x/*/-point.z*/, d*point.y/*/-point.z*/);
 }
 
+// Face class
+Face::Face(const std::vector<int> &pointIndices) : pointIndices(pointIndices) {}
+
+Face::Face() {}
+
+const std::vector<int> &Face::getPointIndices() const {
+    return pointIndices;
+}
+
+//Figure3D class
 Figure3D::Figure3D(const std::vector<Face> &Faces, const std::vector<Vector3D> &Points, const img::Color &color)
         : Faces(Faces), Points(Points), color(color) {}
 
-void Figure3D::applyTransformation(Matrix &matrix) {
-    for(Vector3D& point : this->Points){
-        point *= matrix;
-    }
-}
 
 const std::vector<Face> &Figure3D::getFaces() const {
     return Faces;
@@ -123,3 +129,13 @@ void Figure3D::setColor(const img::Color &color) {
 
 Figure3D::Figure3D() {}
 
+std::ostream &operator<<(std::ostream &stream, Figure3D& figure) {
+    for(Face face : figure.getFaces()) {
+        for (int i = 0; i < face.getPointIndices().size(); i++) {
+            stream << figure.getPoints()[face.getPointIndices()[i]];
+            stream << "->";
+            stream << figure.getPoints()[face.getPointIndices()[(i+1)%face.getPointIndices().size()]] << std::endl;
+        }
+    }
+    return stream;
+}
