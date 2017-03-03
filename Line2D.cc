@@ -4,6 +4,17 @@
 
 #include "Line2D.hh"
 
+//Point class
+Point2D::Point2D(double x, double y) : x(x), y(y) {}
+
+Point2D::Point2D() {}
+
+std::ostream& operator<<(std::ostream &stream, Point2D &point) {
+    stream << "(" << point.x << ", " << point.y << ")";
+    return stream;
+}
+
+//Line class
 Line2D::Line2D(const Point2D &point1, const Point2D &point2, img::Color color) : point1(point1), point2(point2) , color(color){}
 
 Line2D::Line2D(double x1, double y1, double x2, double y2, img::Color color) : point1(x1, y1), point2(x2, y2), color(color){

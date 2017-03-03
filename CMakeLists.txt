@@ -18,8 +18,6 @@ set(SOURCE_FILES
         Line2D.hh
         LSystems.cc
         LSystems.hh
-        Point2D.cc
-        Point2D.hh
         UsefulFunctions.cc
         UsefulFunctions.hh
         vector.cc

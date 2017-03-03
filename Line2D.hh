@@ -11,6 +11,17 @@
 #include <cmath>
 #include "UsefulFunctions.hh"
 
+class Point2D {
+public:
+    double x;
+    double y;
+
+    Point2D(double x, double y);
+
+    Point2D();
+};
+std::ostream& operator<<(std::ostream& stream, Point2D& point);
+
 class Line2D {
 public:
     Point2D point1;
