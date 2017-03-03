@@ -1,6 +1,6 @@
 #include "easy_image.hh"
 #include "ini_configuration.hh"
-#include "Intro.hh"
+#include "IntroParser.hh"
 #include "LSystems.hh"
 #include "WireFrameParser.hh"
 
@@ -17,32 +17,9 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
     img::EasyImage image;
     type = configuration["General"]["type"].as_string_or_die();
     //maybe merge all intro functions in a parser;
-    if (type == "IntroColorRectangle"){
-        int w = configuration["ImageProperties"]["width"].as_int_or_die();
-        int h = configuration["ImageProperties"]["height"].as_int_or_die();
-        bool scale = configuration["ColorProperties"]["scaled"].as_bool_or_default(false);
-        image = ColorRectangle(w,h, scale);
-    }
-
-    else if (type == "IntroBlocks"){
-        int w = configuration["ImageProperties"]["width"].as_int_or_die();
-        int h = configuration["ImageProperties"]["height"].as_int_or_die();
-        int nrXBlocks = configuration["BlockProperties"]["nrXBlocks"].as_int_or_die();
-        int nrYBlocks = configuration["BlockProperties"]["nrYBlocks"].as_int_or_die();
-        std::vector<int> colWhite = extractColor(configuration["BlockProperties"]["colorWhite"].as_double_tuple_or_die());
-        std::vector<int> colBlack = extractColor(configuration["BlockProperties"]["colorBlack"].as_double_tuple_or_die());
-        bool invert = configuration["BlockProperties"]["invertColors"].as_bool_or_default(false);
-        image = Blocks(w,h,nrXBlocks,nrYBlocks,colWhite, colBlack,invert);
-    }
-
-    else if (type == "IntroLines"){
-        int w = configuration["ImageProperties"]["width"].as_int_or_die();
-        int h = configuration["ImageProperties"]["height"].as_int_or_die();
-        std::string figure = configuration["LineProperties"]["figure"].as_string_or_die();
-        std::vector<int> colBG = extractColor(configuration["LineProperties"]["bgColor"].as_double_tuple_or_die());
-        std::vector<int> colLine = extractColor(configuration["LineProperties"]["lineColor"].as_double_tuple_or_die());
-        int nrOfLines = configuration["LineProperties"]["nrLines"].as_int_or_die();
-        image = Lines(w,h,figure,colBG,colLine,nrOfLines);
+    if (type == "IntroColorRectangle" || type == "IntroBlocks" || type == "IntroLines"){
+        IntroParser parser(configuration);
+        image = parser.getImage();
     }
 
     else if (type == "2DLSystem"){

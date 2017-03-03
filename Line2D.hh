@@ -5,7 +5,6 @@
 #ifndef ENGINE_LINE_H
 #define ENGINE_LINE_H
 
-#include "Point2D.hh"
 #include <vector>
 #include "easy_image.hh"
 #include <cmath>

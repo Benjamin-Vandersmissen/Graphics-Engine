@@ -10,8 +10,8 @@ set(SOURCE_FILES
         engine.cc
         ini_configuration.cc
         ini_configuration.hh
-        Intro.cc
-        Intro.hh
+        IntroParser.cc
+        IntroParser.hh
         l_parser.cc
         l_parser.hh
         Line2D.cc
