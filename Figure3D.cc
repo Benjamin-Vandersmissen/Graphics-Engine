@@ -86,7 +86,7 @@ Lines2D doProjection(const Figures3D &figures) {
 }
 
 Point2D doProjection(const Vector3D &point, const double d) {
-    return Point2D(d*point.x/*/-point.z*/, d*point.y/*/-point.z*/);
+    return Point2D(d*point.x/-point.z, d*point.y/-point.z);
 }
 
 // Face class
