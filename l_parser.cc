@@ -342,7 +342,7 @@ namespace
 		}
 		return num_parenthesis == 0;
 	}
-	void parse_rules(std::set<char> const& alphabet, std::map<char, std::pair<std::string, double>>& rules, stream_parser& parser, bool parse2D)
+	void parse_rules(std::set<char> const& alphabet, std::map<char, std::vector<std::pair<std::string, double>>>& rules, stream_parser& parser, bool parse2D)
 	{
 		parser.skip_comments_and_whitespace();
 		parser.assertChars("Rules");
@@ -368,19 +368,25 @@ namespace
 			std::string rule = parser.readQuotedString();
 			if (!isValidRule(alphabet, rule, parse2D))
 				throw LParser::ParserException(std::string("Invalid rule specification for entry '") + alphabet_char + "' in rule specification", parser.getLine(), parser.getCol());
-			rules[alphabet_char].first = rule;
+            std::pair<std::string, double> pair;
+			pair.first = rule;
 			parser.skip_comments_and_whitespace();
 			c = parser.getChar();
             if (c == ':'){
                 parser.skip_comments_and_whitespace();
-                rules[alphabet_char].second = parser.readDouble();
+                pair.second = parser.readDouble();
                 parser.skip_comments_and_whitespace();
                 c = parser.getChar();
             }else{
-                rules[alphabet_char].second = -1;
+                pair.second = -1;
             }
-            std::cerr <<rules[alphabet_char].second << std::endl;
-			if (c == '}')
+            std::cerr <<pair.second << std::endl;
+			if (rules.find(alphabet_char) == rules.end()){
+                rules[alphabet_char] = {pair};
+            }else{
+                rules[alphabet_char].push_back(pair);
+            }
+            if (c == '}')
 				break;
 			else if (c != ',')
 				throw LParser::ParserException("Expected ','", parser.getLine(), parser.getCol());
@@ -495,7 +501,7 @@ bool LParser::LSystem::draw(char c) const
 std::string const& LParser::LSystem::get_replacement(char c) const
 {
 	assert(get_alphabet().find(c) != get_alphabet().end());
-	return replacementrules.find(c)->second.first;
+	return replacementrules.find(c)->second.at(0).first;
 }
 double LParser::LSystem::get_angle() const
 {
