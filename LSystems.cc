@@ -14,15 +14,11 @@ void LSystem2Dstep(LParser::LSystem2D &lSystem2D, img::Color &color, double &x, 
                    int iterations, std::string s, std::vector<std::vector<double>> &brackets) {
     if (iterations > 0) {
         iterations--;
-//        std::cout << s << std::endl;
         for (char c : s) {
 
-//            std::cout << "Iteration" << iterations << std::endl;
-//            std::cerr << x << ',' << y << std::endl;
             if (c != '+' && c != '-' && c != ')' && c != '(') {
                 LSystem2Dstep(lSystem2D, color, x, y, angle, lines, iterations,
                               lSystem2D.get_replacement(c), brackets);
-//                std::cout << "~~~" << std::endl;
             }
             else if (c == '+'){
                 angle += toRadial(lSystem2D.get_angle());
@@ -41,7 +37,6 @@ void LSystem2Dstep(LParser::LSystem2D &lSystem2D, img::Color &color, double &x, 
         }
     }else{
         for (char c : s){
-//            std::cout << c << std::endl;
             if (c == '+'){
                 angle += toRadial(lSystem2D.get_angle());
             }
@@ -61,8 +56,6 @@ void LSystem2Dstep(LParser::LSystem2D &lSystem2D, img::Color &color, double &x, 
                 if (lSystem2D.draw(c)){
                     lines.push_back(Line2D(x,y,x+std::cos(angle), y + std::sin(angle), color));
                 }
-//                std::cerr << angle << std::endl;
-
                 x += std::cos(angle);
                 y += std::sin(angle);
             }
