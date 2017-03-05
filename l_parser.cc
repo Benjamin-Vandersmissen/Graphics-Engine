@@ -375,6 +375,9 @@ namespace
             if (c == ':'){
                 parser.skip_comments_and_whitespace();
                 pair.second = parser.readDouble();
+                if (pair.second <= 0){
+                    throw LParser::ParserException("Invalid rule, probability is less than or equal 0", parser.getLine(), parser.getCol());
+                }
                 parser.skip_comments_and_whitespace();
                 c = parser.getChar();
             }else{
@@ -393,6 +396,29 @@ namespace
 			parser.skip_comments_and_whitespace();
 			c = parser.getChar();
 		}
+        for(std::pair<const char,std::vector<std::pair<std::string,double>>>& result : rules){
+            int uninitialised = 0; //tracks amount of replacement rules without probability
+            double total = 0;
+            for(std::pair<std::string, double> pair : result.second){
+                if (pair.second == -1){ //uninitialised
+                    uninitialised++;
+                }else{
+                    total += pair.second;
+                }
+            }
+            if (total > 1){
+                throw(LParser::ParserException((std::string)"total probability of "+ result.first + (std::string)" is higher than one!",parser.getLine(), parser.getCol()));
+            }
+            for(std::pair<std::string,double>& pair : result.second){
+                if (pair.second == -1){
+                    pair.second = (1-total)/uninitialised;
+                }
+            }
+            for(std::pair<std::string,double> pair : result.second){
+                std::cerr << pair.first << ", " << pair.second << std::endl;
+            }
+        }
+
 	}
 	std::string parse_initiator(std::set<char> const& alphabet, stream_parser& parser, bool parse2D)
 	{
@@ -466,6 +492,7 @@ const char* LParser::ParserException::what() const throw ()
 LParser::LSystem::LSystem() :
 	alphabet(), drawfunction(), initiator(""), angle(0.0), replacementrules(), nrIterations(0)
 {
+    std::srand(std::time(NULL));
 }
 
 LParser::LSystem::LSystem(LSystem const&system) :
@@ -498,10 +525,21 @@ bool LParser::LSystem::draw(char c) const
 	assert(get_alphabet().find(c) != get_alphabet().end());
 	return drawfunction.find(c)->second;
 }
-std::string const& LParser::LSystem::get_replacement(char c) const
+std::string const LParser::LSystem::get_replacement(char c) const
 {
 	assert(get_alphabet().find(c) != get_alphabet().end());
-	return replacementrules.find(c)->second.at(0).first;
+    int rand = std::rand() % 100;
+    std::string replacement;
+    double count = 0;
+    for(std::pair<std::string,double> pair : replacementrules.find(c)->second){
+        count += pair.second;
+        if(rand < 100*count){
+            replacement = pair.first;
+            break;
+        }
+    }
+    std::cerr << replacement << std::endl;
+	return replacement;
 }
 double LParser::LSystem::get_angle() const
 {

@@ -25,6 +25,8 @@
 #include <utility> //std::pair
 #include <vector>
 #include <exception>
+#include "time.h"
+#include <random>
 
 
 
@@ -137,7 +139,7 @@ namespace LParser
 			 *
 			 * \return	replacement string
 			 */
-			std::string const& get_replacement(char c) const;
+			std::string const get_replacement(char c) const;
 
 			/**
 			 * \brief Returns the angle of the L-System.
