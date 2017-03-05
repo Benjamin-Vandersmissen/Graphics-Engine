@@ -383,7 +383,6 @@ namespace
             }else{
                 pair.second = -1;
             }
-            std::cerr <<pair.second << std::endl;
 			if (rules.find(alphabet_char) == rules.end()){
                 rules[alphabet_char] = {pair};
             }else{
@@ -535,7 +534,6 @@ std::string const LParser::LSystem::get_replacement(char c) const
             break;
         }
     }
-    std::cerr << replacement << std::endl;
 	return replacement;
 }
 double LParser::LSystem::get_angle() const
