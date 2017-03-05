@@ -414,9 +414,6 @@ namespace
                     pair.second = (1-total)/uninitialised;
                 }
             }
-            for(std::pair<std::string,double> pair : result.second){
-                std::cerr << pair.first << ", " << pair.second << std::endl;
-            }
         }
 
 	}
