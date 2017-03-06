@@ -47,13 +47,16 @@ public:
 
     void applyTransformation(Matrix& matrix);
 };
+
 typedef std::vector<Figure3D> Figures3D;
+
 void applyTransformation(Figures3D& figures, Matrix& matrix);
 Matrix scaleFigure(const double scale);
 Matrix rotateFigureX(const double angle);
 Matrix rotateFigureY(const double angle);
 Matrix rotateFigureZ(const double angle);
 Matrix translateFigure(const Vector3D& vector);
+
 std::ostream& operator<<(std::ostream& stream, Figure3D& figure);
 Lines2D doProjection(const Figures3D& figures);
 Point2D doProjection(const Vector3D& point, const double d = 1);

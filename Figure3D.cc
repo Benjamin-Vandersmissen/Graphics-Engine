@@ -76,7 +76,7 @@ Lines2D doProjection(const Figures3D &figures) {
                 int size = face.getPointIndices().size();
                 Line2D line(points[face.getPointIndices()[i]], points[face.getPointIndices()[(i+1)%size]], figure.getColor());
                 lines.push_back(line);
-                if (size == 2){ //otherwise, it will draw the same line twice
+                if (size == 2){ //size = 2 -> normally : draw_line(p0, p1) and draw_line(p1,p0) => avoid this behaviour
                     break;
                 }
             }

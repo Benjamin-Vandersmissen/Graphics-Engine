@@ -16,7 +16,7 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
     std::string type;
     img::EasyImage image;
     type = configuration["General"]["type"].as_string_or_die();
-    //maybe merge all intro functions in a parser;
+    
     if (type == "IntroColorRectangle" || type == "IntroBlocks" || type == "IntroLines"){
         IntroParser parser(configuration);
         image = parser.getImage();
