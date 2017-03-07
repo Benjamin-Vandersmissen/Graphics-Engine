@@ -25,8 +25,14 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         img::Color color = img::Color(extractColor(configuration[name.c_str()]["color"].as_double_tuple_or_die()));
         if (type == "LineDrawing"){
             figures.push_back(this->parseLinedrawing(configuration, name, color));
-        }else if(type == "Cube"){
-            figures.push_back(this->parseCube(configuration, color));
+        }
+        else if(type == "Cube"){
+            figures.push_back(this->parseCube(color));
+            CenterPoint = CenterPoint.point(0,0,0);
+        }
+        else if(type == "Tetrahedron"){
+            figures.push_back(this->parseTetrahedron(color));
+            CenterPoint = CenterPoint.point(0,0,0);
         }
 
         Matrix m;
@@ -103,7 +109,6 @@ Figure3D WireFrameParser::parseLinedrawing(const ini::Configuration &configurati
         Faces.push_back(Face(indices));
     }
     Figure3D figure(Faces, Points, color);
-//    std::cerr << figure << std::endl;
     return figure;
 }
 
@@ -111,7 +116,7 @@ const img::EasyImage &WireFrameParser::getImage() const {
     return image;
 }
 
-Figure3D WireFrameParser::parseCube(const ini::Configuration &configuration, img::Color &color) {
+Figure3D WireFrameParser::parseCube(img::Color &color) {
     Figure3D figure;
     std::vector<Vector3D> points= {Vector3D::point(1,-1,-1), Vector3D::point(-1,1,-1), Vector3D::point(1,1,1), Vector3D::point(-1,-1,1),
                                    Vector3D::point(1,1,-1), Vector3D::point(-1,-1,-1), Vector3D::point(1,-1,1), Vector3D::point(-1,1,1)};
@@ -119,5 +124,15 @@ Figure3D WireFrameParser::parseCube(const ini::Configuration &configuration, img
     figure.setColor(color);
     std::vector<Face> faces = {Face({1,5,3,7}),Face({5,2,8,3}), Face({2,6,4,8}), Face({6,1,7,4}), Face({7,3,8,4}), Face({1,6,2,5})};
     figure.setFaces(faces);
+    return figure;
+}
+
+Figure3D WireFrameParser::parseTetrahedron(img::Color &color) {
+    Figure3D figure;
+    std::vector<Vector3D> points = {Vector3D::point(1,-1,-1), Vector3D::point(-1,1,-1), Vector3D::point(1,1,1), Vector3D::point(-1,-1,1)};
+    figure.setPoints(points);
+    std::vector<Face> faces = {Face({1,2,3}), Face({2,4,3}), Face({1,4,2}), Face({1,3,4})};
+    figure.setFaces(faces);
+    figure.setColor(color);
     return figure;
 }
