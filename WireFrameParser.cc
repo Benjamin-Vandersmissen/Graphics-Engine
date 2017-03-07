@@ -42,6 +42,9 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         else if (type == "Icosahedron"){
             figures.push_back(this->parseIcosahedron(color));
         }
+        else if (type == "Dodecahedron"){
+            figures.push_back(this->parseDodecahedron(color));
+        }
 
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
@@ -174,4 +177,22 @@ Figure3D WireFrameParser::parseIcosahedron(img::Color &color) {
     figure.setFaces(faces);
     figure.setColor(color);
     return figure;
+}
+
+Figure3D WireFrameParser::parseDodecahedron(img::Color &color) {
+    Figure3D figure = parseIcosahedron(color);
+    Figure3D figure2;
+    std::vector<Vector3D> points = {};
+    for(int i = 0; i < figure.getFaces().size();i++){
+        points.push_back(figure.getCenter(i));
+    }
+    figure2.setPoints(points);
+    std::vector<Face> faces = {Face({1,2,3,4,5}), Face({1,6,7,8,2}), Face({2,8,9,10,3}), Face({3,10,11,12,4}),
+                               Face({4,12,13,14,5}), Face({5,14,15,6,1}), Face({20,19,18,17,16}),
+                               Face({20,15,14,13,19}), Face({19,13,12,11,18}), Face({18,11,10,9,17}),
+                               Face({17,9,8,7,16}), Face({16,7,6,15,20})};
+
+    figure2.setFaces(faces);
+    figure2.setColor(color);
+    return figure2;
 }
