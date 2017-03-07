@@ -45,6 +45,9 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         else if (type == "Dodecahedron"){
             figures.push_back(this->parseDodecahedron(color));
         }
+        else if (type == "Cone"){
+            figures.push_back(this->parseCone(configuration, name, color));
+        }
 
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
@@ -195,4 +198,25 @@ Figure3D WireFrameParser::parseDodecahedron(img::Color &color) {
     figure2.setFaces(faces);
     figure2.setColor(color);
     return figure2;
+}
+
+Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+    double height = configuration[name]["height"].as_int_or_die();
+    int n = configuration[name]["n"].as_int_or_die();
+    Figure3D figure;
+    Vector3D top = Vector3D::point(0,0,height);
+    std::vector<Vector3D> points = {};
+    std::vector<Face> faces = {};
+    std::vector<int> circleIndices = {};
+    for(int i = 0; i < n; i++){
+        points.push_back(Vector3D::point(cos(2*i*M_PI/n), sin(2*i*M_PI/n) , 0));
+        faces.push_back(Face({i+1, (i+1)%(n+1)+1, n+1}));
+        circleIndices.insert(circleIndices.begin(), i+1);
+    }
+    faces.push_back(Face(circleIndices));
+    points.push_back(top);
+    figure.setColor(color);
+    figure.setFaces(faces);
+    figure.setPoints(points);
+    return figure;
 }

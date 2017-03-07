@@ -33,7 +33,7 @@ draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool rain
     }
     double Imagex = size * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
     double Imagey = size * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
-    img::EasyImage image(roundToInt(Imagex), roundToInt(Imagey), bgColor);
+    img::EasyImage image(roundToInt(Imagex)+1, roundToInt(Imagey)+1, bgColor);
     double d = 0.95 * (Imagex/ (Xmax-Xmin));
     double DCx = d * (Xmin+Xmax)/2;
     double DCy = d * (Ymin+Ymax)/2;

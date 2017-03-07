@@ -141,6 +141,7 @@ Vector3D Figure3D::getCenter(int face) {
     return point;
 }
 
+
 std::ostream &operator<<(std::ostream &stream, const Figure3D& figure) {
     for(Face face : figure.getFaces()) {
         for (int i = 0; i < face.getPointIndices().size(); i++) {
