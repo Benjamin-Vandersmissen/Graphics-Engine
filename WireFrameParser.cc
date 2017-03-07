@@ -23,29 +23,25 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         Vector3D CenterPoint;
         CenterPoint = Vector3D::point(CenterCoords[0], CenterCoords[1], CenterCoords[2]);
         img::Color color = img::Color(extractColor(configuration[name.c_str()]["color"].as_double_tuple_or_die()));
+
+        Matrix m;
+
+        Vector3D vec;
         if (type == "LineDrawing"){
             figures.push_back(this->parseLinedrawing(configuration, name, color));
         }
         else if(type == "Cube"){
             figures.push_back(this->parseCube(color));
-            CenterPoint = CenterPoint.point(0,0,0);
         }
         else if(type == "Tetrahedron"){
             figures.push_back(this->parseTetrahedron(color));
-            CenterPoint = CenterPoint.point(0,0,0);
         }
         else if (type == "Octahedron"){
             figures.push_back(this->parseOctahedron(color));
-            CenterPoint = CenterPoint.point(0,0,0);
         }
-
-        Matrix m;
-
-        Vector3D vec;
-        vec = Vector3D::vector(-CenterPoint.x, -CenterPoint.y, -CenterPoint.z); //translate the whole Figure if the centerpoint isn't (0,0,0);
-        m = translateFigure(vec);
-        figures.back().applyTransformation(m);
-        CenterPoint = CenterPoint.point(0,0,0); //figure is translated so centerpoint is set to (0,0,0)
+        else if (type == "Icosahedron"){
+            figures.push_back(this->parseIcosahedron(color));
+        }
 
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
@@ -59,7 +55,10 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         m = rotateFigureZ(rotateZ);
         figures.back().applyTransformation(m); //rotate Z-axis
 
-
+        vec = Vector3D::vector(+CenterPoint.x, +CenterPoint.y, +CenterPoint.z); //translate the whole Figure if the centerpoint isn't (0,0,0);
+        m = translateFigure(vec);
+        figures.back().applyTransformation(m);
+        CenterPoint = CenterPoint.point(0,0,0); //figure is translated so centerpoint is set to (0,0,0)
     }
     double r = std::sqrt((pow(eye.x,2) + pow(eye.y,2) + pow(eye.z,2)));
     double theta = std::atan2(eye.y,eye.x);
@@ -148,6 +147,30 @@ Figure3D WireFrameParser::parseOctahedron(img::Color &color) {
     figure.setPoints(points);
     std::vector<Face> faces = {Face({1,2,6}), Face({2,3,6}), Face({3,4,6}), Face({4,1,6}),
                                Face({2,1,5}), Face({3,2,5}), Face({4,3,5}), Face({1,4,5})};
+    figure.setFaces(faces);
+    figure.setColor(color);
+    return figure;
+}
+
+Figure3D WireFrameParser::parseIcosahedron(img::Color &color) {
+    Figure3D figure;
+    std::vector<Vector3D> points = {Vector3D::point(0,0, std::sqrt(5)/2)};
+    for(int i = 2; i < 12; i ++){
+        Vector3D point;
+        if(i <= 6){
+            point = point.point(cos((i-2)*2*M_PI/5), sin((i-2)*2*M_PI/5), 0.5);
+        }
+        else{
+            point = point.point(cos(M_PI/5 + (i-7)*2*M_PI/5), sin(M_PI/5 +(i-7)*2*M_PI/5), -0.5);
+        }
+        points.push_back(point);
+    }
+    points.push_back(Vector3D::point(0,0,-sqrt(5)/2));
+    figure.setPoints(points);
+    std::vector<Face> faces = {Face({1,2,3}), Face({1,3,4}), Face({1,4,5}), Face({1,5,6}), Face({1,6,2}),
+                               Face({2,7,3}), Face({3,7,8}), Face({3,8,4}), Face({4,8,9}), Face({4,9,5}),
+                               Face({5,9,10}), Face({5,10,6}), Face({6,10,11}), Face({6,11,2}), Face({2,11,7}),
+                               Face({12,8,7}), Face({12,9,8}), Face({12,10,9}), Face({12,11,10}), Face({12,7,11})};
     figure.setFaces(faces);
     figure.setColor(color);
     return figure;
