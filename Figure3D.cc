@@ -74,7 +74,7 @@ Lines2D doProjection(const Figures3D &figures) {
             for(int i = 0; i < face.getPointIndices().size(); i++){
                 //connect all points from the face
                 int size = face.getPointIndices().size();
-                Line2D line(points[face.getPointIndices()[i]], points[face.getPointIndices()[(i+1)%size]], figure.getColor());
+                Line2D line(points[face.getPointIndices()[i]-1], points[face.getPointIndices()[(i+1)%size]-1], figure.getColor());
                 lines.push_back(line);
                 if (size == 2){ //otherwise, it will draw the same line twice
                     break;
@@ -129,12 +129,12 @@ void Figure3D::setColor(const img::Color &color) {
 
 Figure3D::Figure3D() {}
 
-std::ostream &operator<<(std::ostream &stream, Figure3D& figure) {
+std::ostream &operator<<(std::ostream &stream, const Figure3D& figure) {
     for(Face face : figure.getFaces()) {
         for (int i = 0; i < face.getPointIndices().size(); i++) {
-            stream << figure.getPoints()[face.getPointIndices()[i]];
+            stream << figure.getPoints()[face.getPointIndices()[i]-1];
             stream << "->";
-            stream << figure.getPoints()[face.getPointIndices()[(i+1)%face.getPointIndices().size()]] << std::endl;
+            stream << figure.getPoints()[face.getPointIndices()[(i+1)%face.getPointIndices().size()]-1] << std::endl;
         }
     }
     return stream;

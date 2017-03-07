@@ -25,9 +25,12 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         img::Color color = img::Color(extractColor(configuration[name.c_str()]["color"].as_double_tuple_or_die()));
         if (type == "LineDrawing"){
             figures.push_back(this->parseLinedrawing(configuration, name, color));
+        }else if(type == "Cube"){
+            figures.push_back(this->parseCube(configuration, color));
         }
 
         Matrix m;
+
         Vector3D vec;
         vec = Vector3D::vector(-CenterPoint.x, -CenterPoint.y, -CenterPoint.z); //translate the whole Figure if the centerpoint isn't (0,0,0);
         m = translateFigure(vec);
@@ -45,6 +48,8 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
 
         m = rotateFigureZ(rotateZ);
         figures.back().applyTransformation(m); //rotate Z-axis
+
+
     }
     double r = std::sqrt((pow(eye.x,2) + pow(eye.y,2) + pow(eye.z,2)));
     double theta = std::atan2(eye.y,eye.x);
@@ -104,4 +109,15 @@ Figure3D WireFrameParser::parseLinedrawing(const ini::Configuration &configurati
 
 const img::EasyImage &WireFrameParser::getImage() const {
     return image;
+}
+
+Figure3D WireFrameParser::parseCube(const ini::Configuration &configuration, img::Color &color) {
+    Figure3D figure;
+    std::vector<Vector3D> points= {Vector3D::point(1,-1,-1), Vector3D::point(-1,1,-1), Vector3D::point(1,1,1), Vector3D::point(-1,-1,1),
+                                   Vector3D::point(1,1,-1), Vector3D::point(-1,-1,-1), Vector3D::point(1,-1,1), Vector3D::point(-1,1,1)};
+    figure.setPoints(points);
+    figure.setColor(color);
+    std::vector<Face> faces = {Face({1,5,3,7}),Face({5,2,8,3}), Face({2,6,4,8}), Face({6,1,7,4}), Face({7,3,8,4}), Face({1,6,2,5})};
+    figure.setFaces(faces);
+    return figure;
 }

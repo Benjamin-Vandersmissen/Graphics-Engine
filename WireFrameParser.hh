@@ -20,6 +20,7 @@ public:
 public:
     WireFrameParser(const ini::Configuration &configuration);
     Figure3D parseLinedrawing(const ini::Configuration &configuration, std::string &name, img::Color &color);
+    Figure3D parseCube(const ini::Configuration &configuration, img::Color &color);
 };
 
 
