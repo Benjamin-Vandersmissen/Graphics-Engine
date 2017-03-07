@@ -29,6 +29,7 @@ public:
     Figure3D parseCone(const ini::Configuration &configuration, std::string &name, img::Color& color);
     Figure3D parseCylinder(const ini::Configuration &configuration, std::string &name, img::Color& color);
     Figure3D parseSphere(const ini::Configuration &configuration, std::string &name, img::Color& color);
+    Figure3D parseTorus(const ini::Configuration &configuration, std::string &name, img::Color& color);
 };
 
 

@@ -54,6 +54,9 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         else if (type == "Sphere"){
             figures.push_back(this->parseSphere(configuration, name, color));
         }
+        else if (type == "Torus"){
+            figures.push_back(this->parseTorus(configuration, name, color));
+        }
 
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
@@ -308,6 +311,29 @@ Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, s
         point /= point.length();
         point.normalise();
     }
+    figure.setPoints(points);
+    return figure;
+}
+
+Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+    Figure3D figure;
+    double r = configuration[name]["r"].as_double_or_die();
+    double R = configuration[name]["R"].as_double_or_die();
+    int m = configuration[name]["m"].as_int_or_die();
+    int n = configuration[name]["n"].as_int_or_die();
+    std::vector<Vector3D> points;
+    std::vector<Face> faces;
+    for(int i = 0 ; i < n; i++){
+        for(int j = 0; j < m; j++){
+            double u = 2*i*M_PI/n;
+            double v = 2*j*M_PI/m;
+            Vector3D point = Vector3D::point((R+r*cos(v))*cos(u), (R+r*cos(v))*sin(u), r*sin(v));
+            points.push_back(point);
+            faces.push_back(Face({m*i+j + 1, m*((i+1)%n) + j + 1, m*((i+1)%n) + (j+1)%m + 1, m*i + (j+1)%m + 1}));
+        }
+    }
+    figure.setColor(color);
+    figure.setFaces(faces);
     figure.setPoints(points);
     return figure;
 }
