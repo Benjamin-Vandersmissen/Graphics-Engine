@@ -129,6 +129,18 @@ void Figure3D::setColor(const img::Color &color) {
 
 Figure3D::Figure3D() {}
 
+Vector3D Figure3D::getCenter(int face) {
+    if (face < 0 || face > this->Faces.size()){
+        throw(std::invalid_argument("index out of bounds"));
+    }
+    Vector3D point = Vector3D::point(0,0,0);
+    for(int index: this->Faces[face].getPointIndices()){
+        point += this->Points[index-1];
+    }
+    point /= this->Faces[face].getPointIndices().size();
+    return point;
+}
+
 std::ostream &operator<<(std::ostream &stream, const Figure3D& figure) {
     for(Face face : figure.getFaces()) {
         for (int i = 0; i < face.getPointIndices().size(); i++) {

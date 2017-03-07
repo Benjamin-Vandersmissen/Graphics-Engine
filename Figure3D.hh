@@ -46,6 +46,8 @@ public:
     Figure3D();
 
     void applyTransformation(Matrix& matrix);
+
+    Vector3D getCenter(int face);
 };
 
 typedef std::vector<Figure3D> Figures3D;

@@ -24,6 +24,7 @@ public:
     Figure3D parseTetrahedron(img::Color& color);
     Figure3D parseOctahedron(img::Color& color);
     Figure3D parseIcosahedron(img::Color& color);
+    Figure3D parseDodecahedron(img::Color& color);
 };
 
 
