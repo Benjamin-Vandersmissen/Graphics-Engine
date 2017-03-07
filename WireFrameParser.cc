@@ -48,7 +48,9 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         else if (type == "Cone"){
             figures.push_back(this->parseCone(configuration, name, color));
         }
-
+        else if (type == "Cylinder"){
+            figures.push_back(this->parseCylinder(configuration, name, color));
+        }
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
 
@@ -220,3 +222,34 @@ Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std
     figure.setPoints(points);
     return figure;
 }
+
+Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+    double height = configuration[name]["height"].as_double_or_die();
+    int n = configuration[name]["n"].as_int_or_die();
+    Figure3D figure;
+    std::vector<Vector3D> points = {};
+    std::vector<Face> faces = {};
+    std::vector<int> circleIndices = {};
+
+    for(int i = 0; i < n; i ++){
+        if (i < n/2) {
+            points.push_back(Vector3D::point(cos(4 * i * M_PI / n), sin(4 * i * M_PI / n), 0));
+            faces.push_back(Face({i + 1, (i + 1) % (n / 2) + 1, i + n/2 + 1, n/2 + (i + 1) % (n / 2)}));
+            circleIndices.insert(circleIndices.begin(), i + 1);
+        }
+        if (i == n/2){
+            faces.push_back(Face(circleIndices));
+            circleIndices = {};
+        };
+        if(i >= n/2){
+            points.push_back(Vector3D::point(cos(4 * i * M_PI / n), sin(4 * i * M_PI / n), height));
+        }
+
+    }
+    faces.push_back(Face(circleIndices));
+    figure.setColor(color);
+    figure.setPoints(points);
+    figure.setFaces(faces);
+    return figure;
+}
+

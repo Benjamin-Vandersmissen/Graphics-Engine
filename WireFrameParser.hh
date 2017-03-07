@@ -26,6 +26,7 @@ public:
     Figure3D parseIcosahedron(img::Color& color);
     Figure3D parseDodecahedron(img::Color& color);
     Figure3D parseCone(const ini::Configuration &configuration, std::string &name, img::Color& color);
+    Figure3D parseCylinder(const ini::Configuration &configuration, std::string &name, img::Color& color);
 };
 
 
