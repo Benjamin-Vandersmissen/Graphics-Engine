@@ -22,6 +22,7 @@ public:
     Figure3D parseLinedrawing(const ini::Configuration &configuration, std::string &name, img::Color &color);
     Figure3D parseCube(img::Color &color);
     Figure3D parseTetrahedron(img::Color& color);
+    Figure3D parseOctahedron(img::Color& color);
 };
 
 

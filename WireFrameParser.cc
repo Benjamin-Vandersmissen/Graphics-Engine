@@ -34,6 +34,10 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
             figures.push_back(this->parseTetrahedron(color));
             CenterPoint = CenterPoint.point(0,0,0);
         }
+        else if (type == "Octahedron"){
+            figures.push_back(this->parseOctahedron(color));
+            CenterPoint = CenterPoint.point(0,0,0);
+        }
 
         Matrix m;
 
@@ -132,6 +136,18 @@ Figure3D WireFrameParser::parseTetrahedron(img::Color &color) {
     std::vector<Vector3D> points = {Vector3D::point(1,-1,-1), Vector3D::point(-1,1,-1), Vector3D::point(1,1,1), Vector3D::point(-1,-1,1)};
     figure.setPoints(points);
     std::vector<Face> faces = {Face({1,2,3}), Face({2,4,3}), Face({1,4,2}), Face({1,3,4})};
+    figure.setFaces(faces);
+    figure.setColor(color);
+    return figure;
+}
+
+Figure3D WireFrameParser::parseOctahedron(img::Color &color) {
+    Figure3D figure;
+    std::vector<Vector3D> points = {Vector3D::point(1,0,0), Vector3D::point(0,1,0), Vector3D::point(-1,0,0), Vector3D::point(0,-1,0),
+                                    Vector3D::point(0,0,-1), Vector3D::point(0,0,1)};
+    figure.setPoints(points);
+    std::vector<Face> faces = {Face({1,2,6}), Face({2,3,6}), Face({3,4,6}), Face({4,1,6}),
+                               Face({2,1,5}), Face({3,2,5}), Face({4,3,5}), Face({1,4,5})};
     figure.setFaces(faces);
     figure.setColor(color);
     return figure;
