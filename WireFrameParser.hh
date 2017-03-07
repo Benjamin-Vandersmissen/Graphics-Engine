@@ -9,6 +9,7 @@
 #include "ini_configuration.hh"
 #include "Figure3D.hh"
 #include "UsefulFunctions.hh"
+#include <algorithm>
 
 class WireFrameParser {
 private:
@@ -27,6 +28,7 @@ public:
     Figure3D parseDodecahedron(img::Color& color);
     Figure3D parseCone(const ini::Configuration &configuration, std::string &name, img::Color& color);
     Figure3D parseCylinder(const ini::Configuration &configuration, std::string &name, img::Color& color);
+    Figure3D parseSphere(const ini::Configuration &configuration, std::string &name, img::Color& color);
 };
 
 

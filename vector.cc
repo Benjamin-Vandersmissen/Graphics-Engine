@@ -545,3 +545,7 @@ std::ostream &operator<<(std::ostream   &output_stream,
         vector.print(output_stream);
         return output_stream;
 }
+
+bool operator==(const Vector3D &arg1, const Vector3D &arg2) {
+    return (arg1.x == arg2.x && arg1.y == arg2.y && arg1.z == arg2.z&& (arg1.is_vector() == arg2.is_vector()));
+}

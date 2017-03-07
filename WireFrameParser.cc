@@ -51,6 +51,10 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         else if (type == "Cylinder"){
             figures.push_back(this->parseCylinder(configuration, name, color));
         }
+        else if (type == "Sphere"){
+            figures.push_back(this->parseSphere(configuration, name, color));
+        }
+
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
 
@@ -250,6 +254,61 @@ Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration,
     figure.setColor(color);
     figure.setPoints(points);
     figure.setFaces(faces);
+    return figure;
+}
+
+Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+    int n = configuration[name]["n"].as_int_or_die();
+    Figure3D figure = parseIcosahedron(color);
+    for (int j = 0; j < n; j++) {
+        std::vector<std::vector<Vector3D>> facesInPoints = {};
+        for (Face face : figure.getFaces()) {
+            std::vector<Vector3D> faceInPoints;
+            for (int i :face.getPointIndices()) {
+                faceInPoints.push_back(figure.getPoints()[i - 1]);
+            }
+            facesInPoints.push_back(faceInPoints);
+        }
+        std::vector<std::vector<Vector3D>> newFaces = {};
+        for (std::vector<Vector3D> face : facesInPoints) {
+            std::vector<Vector3D> face2;
+            face2 = {face[0], (face[0] + face[2]) / 2, (face[0] + face[1]) / 2};
+            newFaces.push_back(face2);
+            face2 = {face[1], (face[1] + face[0]) / 2, (face[1] + face[2]) / 2};
+            newFaces.push_back(face2);
+            face2 = {(face[1] + face[2]) / 2, face[2], (face[0] + face[2]) / 2};
+            newFaces.push_back(face2);
+            face2 = {(face[0] + face[1]) / 2, (face[1] + face[2]) / 2, (face[0] + face[2]) / 2};
+            newFaces.push_back(face2);
+        }
+
+        std::vector<Vector3D> points = {};
+        std::vector<Face> faces = {};
+
+        for (std::vector<Vector3D> faceInPoints : newFaces) {
+            std::vector<int> indices = {};
+            for (Vector3D point : faceInPoints) {
+                auto it = std::find(points.begin(), points.end(), point);
+                if (it == points.end()) {
+                    points.push_back(point);
+                    indices.push_back(points.size());
+                } else {
+                    indices.push_back(std::distance(points.begin(), it) + 1);
+                }
+            }
+            faces.push_back(Face(indices));
+        }
+        figure.setColor(color);
+        figure.setFaces(faces);
+        figure.setPoints(points);
+    }
+
+    std::vector<Vector3D> points = figure.getPoints();
+    for(Vector3D& point : points){
+        point /= point.length();
+        point.normalise();
+    }
+    figure.setPoints(points);
     return figure;
 }
 

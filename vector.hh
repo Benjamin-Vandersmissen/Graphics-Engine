@@ -459,6 +459,16 @@ class Vector3D
 };
 
 /**
+ * \brief compares two vectors
+ *
+ * \param arg1 The parameter to compare
+ *
+ * \param arg2 The parameter to compare against
+ *
+ * \return boolean succes
+ * */
+bool operator==(const Vector3D& arg1, const Vector3D& arg2);
+/**
  * \brief Returns the passed parameter unchanged.
  *
  * This function is here for convenience.  It allows compilation of expressions
