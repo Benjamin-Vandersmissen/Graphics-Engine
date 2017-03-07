@@ -20,9 +20,9 @@ void IntroParser::parseColorRectangle(const ini::Configuration &configuration) {
     }else{
         for(float i = 0; i < w; i++){
             for (float j = 0; j < h; j++){
-                image(i,j).red = (int)255*(i/w);
-                image(i,j).green = (int)255*(j/h);
-                image(i,j).blue = (int)(255*(i/w + j/h)) % 256;
+                image(i,j).red = roundToInt(255*(i/w));
+                image(i,j).green = roundToInt(255*(j/h));
+                image(i,j).blue = roundToInt(255*(i/w + j/h)) % 256;
             }
         }
     }

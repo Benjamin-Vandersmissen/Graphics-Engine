@@ -47,7 +47,9 @@ public:
 
     void applyTransformation(Matrix& matrix);
 };
+
 typedef std::vector<Figure3D> Figures3D;
+
 void applyTransformation(Figures3D& figures, Matrix& matrix);
 Matrix scaleFigure(const double scale);
 Matrix rotateFigureX(const double angle);

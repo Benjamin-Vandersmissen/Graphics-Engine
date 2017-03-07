@@ -373,15 +373,17 @@ namespace
 			parser.skip_comments_and_whitespace();
 			c = parser.getChar();
             if (c == ':'){
+				//expect a double between 0 and 1
                 parser.skip_comments_and_whitespace();
                 pair.second = parser.readDouble();
-                if (pair.second <= 0){
-                    throw LParser::ParserException("Invalid rule, probability is less than or equal 0", parser.getLine(), parser.getCol());
+                if (pair.second <= 0 or pair.second > 1){
+                    throw LParser::ParserException("Invalid probability", parser.getLine(), parser.getCol());
                 }
                 parser.skip_comments_and_whitespace();
                 c = parser.getChar();
             }else{
                 pair.second = -1;
+				//default value
             }
 			if (rules.find(alphabet_char) == rules.end()){
                 rules[alphabet_char] = {pair};
@@ -398,7 +400,7 @@ namespace
         for(std::pair<const char,std::vector<std::pair<std::string,double>>>& result : rules){
             int uninitialised = 0; //tracks amount of replacement rules without probability
             double total = 0;
-            for(std::pair<std::string, double> pair : result.second){
+            for(std::pair<std::string, double>& pair : result.second){
                 if (pair.second == -1){ //uninitialised
                     uninitialised++;
                 }else{
