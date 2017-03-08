@@ -92,7 +92,7 @@ LParser::LSystem3D getLSystem3D(std::string filename) {
 
 Figure3D drawLSystem3D(LParser::LSystem3D &lSystem3D, img::Color &color) {
     Figure3D figure;
-    std::vector<Vector3D> points = {};
+    std::vector<Vector3D> points = {Vector3D::point(0,0,0)};
     std::vector<Face> faces = {};
     std::string s = lSystem3D.get_initiator();
     Vector3D point = Vector3D::point(0,0,0);
@@ -198,6 +198,7 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
                 L = brackets.back()[2];
                 U = brackets.back()[3];
                 brackets.pop_back();
+                points.push_back(point);
             }
         }
     }
@@ -259,11 +260,15 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
                 H = brackets.back()[1];
                 L = brackets.back()[2];
                 U = brackets.back()[3];
+                points.push_back(point);
                 brackets.pop_back();
             }
             else{
+                point += H;
                 if (lsystem.draw(c)){
                     points.push_back(point);
+                    std::vector<int> indices = {points.size()-1, points.size()};
+                    faces.push_back(Face({indices}));
                 }
 //                std::cerr << "H: " << H << std::endl;
 //                std::cerr << "L: " << L << std::endl;
@@ -275,14 +280,6 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
 //                }else{
 //                    pos = std::distance(points.begin(), it);
 
-                point += H;
-                if (lsystem.draw(c)){
-                    if (points.size() == 1)
-                        points.push_back(point);
-
-                    std::vector<int> vector= {points.size()-1, points.size()};
-                    faces.push_back(Face(vector));
-                }
 
             }
         }
