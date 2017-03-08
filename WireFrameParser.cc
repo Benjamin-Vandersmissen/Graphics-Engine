@@ -57,6 +57,9 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         else if (type == "Torus"){
             figures.push_back(this->parseTorus(configuration, name, color));
         }
+        else if (type == "3DLSystem"){
+            figures.push_back(this->parse3DLsystem(configuration, name, color));
+        }
 
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
