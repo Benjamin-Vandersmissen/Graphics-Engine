@@ -9,6 +9,7 @@
 #include "ini_configuration.hh"
 #include "Figure3D.hh"
 #include "UsefulFunctions.hh"
+#include "LSystems.hh"
 #include <algorithm>
 
 class WireFrameParser {
@@ -30,6 +31,7 @@ public:
     Figure3D parseCylinder(const ini::Configuration &configuration, std::string &name, img::Color& color);
     Figure3D parseSphere(const ini::Configuration &configuration, std::string &name, img::Color& color);
     Figure3D parseTorus(const ini::Configuration &configuration, std::string &name, img::Color& color);
+    Figure3D parse3DLsystem(const ini::Configuration &configuration, std::string & name, img::Color& color);
 };
 
 

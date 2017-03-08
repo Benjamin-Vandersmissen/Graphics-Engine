@@ -338,3 +338,11 @@ Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, st
     return figure;
 }
 
+Figure3D
+WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+    std::string filename = configuration[name]["inputfile"].as_string_or_die();
+    LParser::LSystem3D Lsystem = getLSystem3D(filename);
+    Figure3D figure = drawLSystem3D(Lsystem, color);
+    return figure;
+}
+
