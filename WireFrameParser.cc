@@ -97,7 +97,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
     applyTransformation(figures, eyeMatrix);
     Lines2D lines = doProjection(figures);
     img::EasyImage image;
-    image = draw2DLines(lines, size, bgcolor);
+    image = draw2DLines(lines, size, bgcolor, true);
     this->image = image;
 }
 
@@ -210,7 +210,7 @@ Figure3D WireFrameParser::parseDodecahedron(img::Color &color) {
 }
 
 Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std::string &name, img::Color &color) {
-    double height = configuration[name]["height"].as_int_or_die();
+    double height = configuration[name]["height"].as_double_or_die();
     int n = configuration[name]["n"].as_int_or_die();
     Figure3D figure;
     Vector3D top = Vector3D::point(0,0,height);
