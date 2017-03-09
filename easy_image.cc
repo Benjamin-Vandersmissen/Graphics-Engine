@@ -307,7 +307,7 @@ void img::EasyImage::draw_line_rainbow(unsigned int x0, unsigned int y0, unsigne
 		{
 			for (unsigned int i = 0; i <= (x1 - x0); i++)
 			{
-				Color color = Color(256*(double)x0/this->width, 256*(double)y0/this->height, 256*((double)y0/this->height + (double)x0/this->width));
+				Color color = Color(256*(double)(x0+i)/this->width, 256*(double)(y0+m*i)/this->height, 256*((double)(y0+m*i)/this->height + (double)(x0+i)/this->width));
 				(*this)(x0 + i, (unsigned int) round(y0 + m * i)) = color;
 			}
 		}
@@ -315,7 +315,7 @@ void img::EasyImage::draw_line_rainbow(unsigned int x0, unsigned int y0, unsigne
 		{
 			for (unsigned int i = 0; i <= (y1 - y0); i++)
 			{
-				Color color = Color(256*(double)x0/this->width, 256*(double)y0/this->height, 256*((double)y0/this->height + (double)x0/this->width));
+				Color color = Color(256*(double)(x0+i/m)/this->width, 256*(double)(y0+i)/this->height, 256*((double)(y0+i)/this->height + (double)(x0+i/m)/this->width));
 				(*this)((unsigned int) round(x0 + (i / m)), y0 + i) = color;
 			}
 		}
@@ -323,7 +323,7 @@ void img::EasyImage::draw_line_rainbow(unsigned int x0, unsigned int y0, unsigne
 		{
 			for (unsigned int i = 0; i <= (y0 - y1); i++)
 			{
-				Color color = Color(256*(double)x0/this->width, 256*(double)y0/this->height, 256*((double)y0/this->height + (double)x0/this->width));
+				Color color = Color(256*(double)(x0-i/m)/this->width, 256*(double)(y0-i)/this->height, 256*((double)(y0-i)/this->height + (double)(x0-i/m)/this->width));
 				(*this)((unsigned int) round(x0 - (i / m)), y0 - i) = color;
 			}
 		}

@@ -57,9 +57,16 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
         else if (type == "Torus"){
             figures.push_back(this->parseTorus(configuration, name, color));
         }
+        else if (type == "Mobius"){
+            figures.push_back(this->parseMobius(configuration, name, color));
+        }
         else if (type == "3DLSystem"){
             figures.push_back(this->parse3DLsystem(configuration, name, color));
         }
+        else if (type == "NavelTorus"){
+            figures.push_back(this->parseNavelTorus(configuration, name, color));
+        }
+
 
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
@@ -100,7 +107,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
     applyTransformation(figures, eyeMatrix);
     Lines2D lines = doProjection(figures);
     img::EasyImage image;
-    image = draw2DLines(lines, size, bgcolor, true);
+    image = draw2DLines(lines, size, bgcolor,true);
     this->image = image;
 }
 
@@ -349,3 +356,48 @@ WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::st
     return figure;
 }
 
+Figure3D WireFrameParser::parseMobius(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+    Figure3D figure;
+    double r = configuration[name]["r"].as_double_or_die();
+    double R = configuration[name]["R"].as_double_or_die();
+    int m = configuration[name]["m"].as_int_or_die();
+    int n = configuration[name]["n"].as_int_or_die();
+    std::vector<Vector3D> points;
+    std::vector<Face> faces;
+    for(int i = 0 ; i < n; i++){
+        for(int j = 0; j < m; j++){
+            double u = 2*i*M_PI/n;
+            double v = 2*j*M_PI/m;
+            Vector3D point = Vector3D::point((1+v/2*cos(u/2))*cos(u), (1+v/2*cos(u/2))*sin(u), v/2*sin(u/2));
+            points.push_back(point);
+            faces.push_back(Face({m*i+j + 1, m*((i+1)%n) + j + 1, m*((i+1)%n) + (j+1)%m + 1, m*i + (j+1)%m + 1}));
+        }
+    }
+    figure.setColor(color);
+    figure.setFaces(faces);
+    figure.setPoints(points);
+    return figure;
+}
+
+Figure3D WireFrameParser::parseNavelTorus(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+    Figure3D figure;
+    double r = configuration[name]["r"].as_double_or_die();
+    double R = configuration[name]["R"].as_double_or_die();
+    int m = configuration[name]["m"].as_int_or_die();
+    int n = configuration[name]["n"].as_int_or_die();
+    std::vector<Vector3D> points;
+    std::vector<Face> faces;
+    for(int i = 0 ; i < n; i++){
+        for(int j = 0; j < m; j++){
+            double u = 2*i*M_PI/n;
+            double v = 2*j*M_PI/m;
+            Vector3D point = Vector3D::point(sin(u)*(7+cos(u/3-2*v) + 2* cos(u/3+v)), cos(u)*(7+cos(u/3-2*v) + 2* cos(u/3+v)), sin(u/3-2*v)+2*sin(u/3+v));
+            points.push_back(point);
+            faces.push_back(Face({m*i+j + 1, m*((i+1)%n) + j + 1, m*((i+1)%n) + (j+1)%m + 1, m*i + (j+1)%m + 1}));
+        }
+    }
+    figure.setColor(color);
+    figure.setFaces(faces);
+    figure.setPoints(points);
+    return figure;
+}
