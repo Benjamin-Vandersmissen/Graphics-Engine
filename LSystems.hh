@@ -10,6 +10,7 @@
 #include "Line2D.hh"
 #include "UsefulFunctions.hh"
 #include "Figure3D.hh"
+#include <algorithm>
 
 
 LParser::LSystem2D getLSystem2D(std::string filename);

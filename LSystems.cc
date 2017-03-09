@@ -92,7 +92,7 @@ LParser::LSystem3D getLSystem3D(std::string filename) {
 
 Figure3D drawLSystem3D(LParser::LSystem3D &lSystem3D, img::Color &color) {
     Figure3D figure;
-    std::vector<Vector3D> points = {};
+    std::vector<Vector3D> points = {Vector3D::point(0,0,0)};
     std::vector<Face> faces = {};
     std::string s = lSystem3D.get_initiator();
     Vector3D point = Vector3D::point(0,0,0);
@@ -103,9 +103,29 @@ Figure3D drawLSystem3D(LParser::LSystem3D &lSystem3D, img::Color &color) {
 
     LSystem3Dstep(lSystem3D, faces, point, H, L, U, lSystem3D.get_nr_iterations(),
                   s, brackets, points);
+//    for( int i = 0; i < lSystem3D.get_nr_iterations();i++){
+//       std::string temp;
+//        for(char c :s){
+//            std::string specialChars = "+-^&\\/|()";
+//            if (specialChars.find(c) == std::string::npos){
+//                temp += lSystem3D.get_replacement(c);
+//            }else{
+//                temp += c;
+//            }
+//        }
+//        s = temp;
+//    }
+//    for (char c : s){
+//
+//    }
+
+    std::cerr << s << std::endl;
     figure.setColor(color);
     figure.setFaces(faces);
     figure.setPoints(points);
+    for(Face face : figure.getFaces()){
+        std::cerr << face.getPointIndices()[0] << ':' << face.getPointIndices()[1] <<std::endl;
+    }
     return figure;
 }
 
@@ -116,44 +136,58 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
     if (iterations > 0){
         iterations--;
         for(char c : s){
-            std::string specialChars = "+-^&\/|()";
+            std::string specialChars = "+-^&\\/|()";
             if (specialChars.find(c) == std::string::npos){
                 LSystem3Dstep(lsystem, faces, point, H, L, U, iterations,
-                              s, brackets, points);
+                              lsystem.get_replacement(c), brackets, points);
             }
             else if (c == '+'){
                 double delta = toRadial(lsystem.get_angle());
-                H = H * cos(delta) + L * sin(delta);
-                L = -H* sin(delta) + L * cos(delta);
+                Vector3D newH = H*cos(delta) + L*sin(delta);
+                Vector3D newL = -H*sin(delta) + L*cos(delta);
+                H = newH;
+                L = newL;
             }
             else if (c == '-'){
                 double delta = -toRadial(lsystem.get_angle());
-                H = H * cos(delta) + L * sin(delta);
-                L = -H* sin(delta) + L * cos(delta);
+                Vector3D newH = H*cos(delta) + L*sin(delta);
+                Vector3D newL = -H*sin(delta) + L*cos(delta);
+                H = newH;
+                L = newL;
             }
             else if (c == '^'){
                 double delta = toRadial(lsystem.get_angle());
-                H = H * cos(delta) + U * sin(delta);
-                U = -H*sin(delta) + U * cos(delta);
+                Vector3D newH = H * cos(delta) + U * sin(delta);
+                Vector3D newU = -H*sin(delta) + U * cos(delta);
+                H = newH;
+                U = newU;
             }
             else if (c == '&'){
                 double delta = -toRadial(lsystem.get_angle());
-                H = H * cos(delta) + U * sin(delta);
-                U = -H*sin(delta) + U * cos(delta);
+                Vector3D newH = H * cos(delta) + U * sin(delta);
+                Vector3D newU = -H*sin(delta) + U * cos(delta);
+                H = newH;
+                U = newU;
             }
             else if (c == '\\'){
                 double delta = toRadial(lsystem.get_angle());
-                L = L*cos(delta) - U *sin(delta);
-                U = L*sin(delta) + U*cos(delta);
+                Vector3D newL = L*cos(delta) - U*sin(delta);
+                Vector3D newU = L*sin(delta) + U*cos(delta);
+                L = newL;
+                U = newU;
             }
             else if (c == '/'){
                 double delta = -toRadial(lsystem.get_angle());
-                L = L*cos(delta) - U *sin(delta);
-                U = L*sin(delta) + U*cos(delta);
+                Vector3D newL = L*cos(delta) - U*sin(delta);
+                Vector3D newU = L*sin(delta) + U*cos(delta);
+                L = newL;
+                U = newU;
             }
             else if (c == '|'){
-                H = -H;
-                L = -L;
+                Vector3D newH = -H;
+                Vector3D newL = -L;
+                H = newH;
+                L = newL;
             }
             else if (c == '('){
                 brackets.push_back({point, H, L, U});
@@ -164,6 +198,7 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
                 L = brackets.back()[2];
                 U = brackets.back()[3];
                 brackets.pop_back();
+                points.push_back(point);
             }
         }
     }
@@ -171,37 +206,51 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
         for(char c : s){
             if (c == '+'){
                 double delta = toRadial(lsystem.get_angle());
-                H = H * cos(delta) + L * sin(delta);
-                L = -H* sin(delta) + L * cos(delta);
+                Vector3D newH = H*cos(delta) + L*sin(delta);
+                Vector3D newL = -H*sin(delta) + L*cos(delta);
+                H = newH;
+                L = newL;
             }
             else if (c == '-'){
                 double delta = -toRadial(lsystem.get_angle());
-                H = H * cos(delta) + L * sin(delta);
-                L = -H* sin(delta) + L * cos(delta);
+                Vector3D newH = H*cos(delta) + L*sin(delta);
+                Vector3D newL = -H*sin(delta) + L*cos(delta);
+                H = newH;
+                L = newL;
             }
             else if (c == '^'){
                 double delta = toRadial(lsystem.get_angle());
-                H = H * cos(delta) + U * sin(delta);
-                U = -H*sin(delta) + U * cos(delta);
+                Vector3D newH = H * cos(delta) + U * sin(delta);
+                Vector3D newU = -H*sin(delta) + U * cos(delta);
+                H = newH;
+                U = newU;
             }
             else if (c == '&'){
                 double delta = -toRadial(lsystem.get_angle());
-                H = H * cos(delta) + U * sin(delta);
-                U = -H*sin(delta) + U * cos(delta);
+                Vector3D newH = H * cos(delta) + U * sin(delta);
+                Vector3D newU = -H*sin(delta) + U * cos(delta);
+                H = newH;
+                U = newU;
             }
             else if (c == '\\'){
                 double delta = toRadial(lsystem.get_angle());
-                L = L*cos(delta) - U *sin(delta);
-                U = L*sin(delta) + U*cos(delta);
+                Vector3D newL = L*cos(delta) - U*sin(delta);
+                Vector3D newU = L*sin(delta) + U*cos(delta);
+                L = newL;
+                U = newU;
             }
             else if (c == '/'){
                 double delta = -toRadial(lsystem.get_angle());
-                L = L*cos(delta) - U *sin(delta);
-                U = L*sin(delta) + U*cos(delta);
+                Vector3D newL = L*cos(delta) - U*sin(delta);
+                Vector3D newU = L*sin(delta) + U*cos(delta);
+                L = newL;
+                U = newU;
             }
             else if (c == '|'){
-                H = -H;
-                L = -L;
+                Vector3D newH = -H;
+                Vector3D newL = -L;
+                H = newH;
+                L = newL;
             }
             else if (c == '('){
                 brackets.push_back({point, H, L, U});
@@ -211,19 +260,26 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
                 H = brackets.back()[1];
                 L = brackets.back()[2];
                 U = brackets.back()[3];
+                points.push_back(point);
                 brackets.pop_back();
             }
             else{
-                if (lsystem.draw(c)){
-                    points.push_back(point);
-                }
                 point += H;
                 if (lsystem.draw(c)){
-                    if (points.size() == 1)
-                        points.push_back(point);
-                    std::vector<int> vector= {points.size()-1, points.size()};
-                    faces.push_back(Face(vector));
+                    points.push_back(point);
+                    std::vector<int> indices = {points.size()-1, points.size()};
+                    faces.push_back(Face({indices}));
                 }
+//                std::cerr << "H: " << H << std::endl;
+//                std::cerr << "L: " << L << std::endl;
+//                std::cerr << "U: " << U << std::endl;
+//                auto it = std::find(points.begin(), points.end(),point);
+//                int pos;
+//                if (it == points.end()){
+//                    pos = points.size();
+//                }else{
+//                    pos = std::distance(points.begin(), it);
+
 
             }
         }
