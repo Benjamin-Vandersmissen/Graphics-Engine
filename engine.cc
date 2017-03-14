@@ -16,7 +16,9 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
     std::string type;
     img::EasyImage image;
     type = configuration["General"]["type"].as_string_or_die();
-    
+    img::EasyImage image2(10,10);
+    image2.draw_line(0,0,9,9,img::Color(100,100,100));
+
     if (type == "IntroColorRectangle" || type == "IntroBlocks" || type == "IntroLines"){
         IntroParser parser(configuration);
         image = parser.getImage();
@@ -34,6 +36,11 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
 
     else if (type == "Wireframe"){
         WireFrameParser parser(configuration);
+        image = parser.getImage();
+    }
+
+    else if (type == "ZBufferedWireframe"){
+        WireFrameParser parser(configuration, true);
         image = parser.getImage();
     }
 	return image;

@@ -6,8 +6,10 @@
 #define ENGINE_LINE_H
 
 #include <vector>
-#include "easy_image.hh"
 #include <cmath>
+#include <limits>
+#include <algorithm>
+#include "easy_image.hh"
 #include "UsefulFunctions.hh"
 
 class Point2D {
@@ -27,6 +29,9 @@ public:
     Point2D point2;
     img::Color color;
 
+    double z1;
+    double z2;
+
     Line2D(const Point2D &point1, const Point2D &point2, img::Color color);
     Line2D(double x1, double y1, double x2, double y2, img::Color color);
 
@@ -35,8 +40,17 @@ public:
 
 typedef std::vector<Line2D> Lines2D;
 img::EasyImage
-draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool rainbow = false);
+draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool rainbow = false, bool ZBuffering = false);
 std::ostream& operator<<(std::ostream& stream, Line2D& line);
+
+class ZBuffer: public std::vector<std::vector<double>>{
+public:
+    ZBuffer(const int width, const int height);
+};
+
+void draw_zbuf_line(ZBuffer &buffer, img::EasyImage &image, const unsigned int x0, const unsigned int y0,
+                    const double z0, const unsigned int x1, const unsigned int y1, const double z1,
+                    const img::Color &color);
 
 
 #endif //ENGINE_LINE_H

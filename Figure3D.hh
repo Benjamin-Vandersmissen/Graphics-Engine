@@ -59,7 +59,7 @@ Matrix rotateFigureY(const double angle);
 Matrix rotateFigureZ(const double angle);
 Matrix translateFigure(const Vector3D& vector);
 std::ostream& operator<<(std::ostream& stream, const Figure3D& figure);
-Lines2D doProjection(const Figures3D& figures);
+Lines2D doProjection(const Figures3D &figures, bool ZBuffering);
 Point2D doProjection(const Vector3D& point, const double d = 1);
 
 #endif //GRAPHICS_ENGINE_FIGURE3D_HH

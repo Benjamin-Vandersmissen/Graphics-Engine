@@ -4,7 +4,7 @@
 
 #include "WireFrameParser.hh"
 
-WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
+WireFrameParser::WireFrameParser(const ini::Configuration &configuration, bool ZBuffering) : ZBuffering(ZBuffering) {
     int size = configuration["General"]["size"].as_int_or_die();
     img::Color bgcolor = img::Color(extractColor(configuration["General"]["backgroundcolor"].as_double_tuple_or_die()));
     int nrFigures = configuration["General"]["nrFigures"].as_int_or_die();
@@ -105,9 +105,9 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration) {
     eyeMatrix(4,3) = -r;
 
     applyTransformation(figures, eyeMatrix);
-    Lines2D lines = doProjection(figures);
+    Lines2D lines = doProjection(figures, ZBuffering);
     img::EasyImage image;
-    image = draw2DLines(lines, size, bgcolor,true);
+    image = draw2DLines(lines, size, bgcolor,false, ZBuffering);
     this->image = image;
 }
 

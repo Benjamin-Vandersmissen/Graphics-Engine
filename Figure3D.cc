@@ -62,7 +62,7 @@ void Figure3D::applyTransformation(Matrix &matrix) {
 
 
 //projection functions
-Lines2D doProjection(const Figures3D &figures) {
+Lines2D doProjection(const Figures3D &figures, bool ZBuffering) {
     Lines2D lines;
     for(const Figure3D& figure : figures){
         std::vector<Point2D> points;
@@ -75,6 +75,10 @@ Lines2D doProjection(const Figures3D &figures) {
                 //connect all points from the face
                 int size = face.getPointIndices().size();
                 Line2D line(points[face.getPointIndices()[i]-1], points[face.getPointIndices()[(i+1)%size]-1], figure.getColor());
+                if (ZBuffering){
+                    line.z1 = figure.getPoints()[face.getPointIndices()[i]-1].z;
+                    line.z2 = figure.getPoints()[face.getPointIndices()[(i+1)%size]-1].z;
+                }
                 lines.push_back(line);
                 if (size == 2){ //size = 2 -> normally : draw_line(p0, p1) and draw_line(p1,p0) => avoid this behaviour
                     break;

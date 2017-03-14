@@ -119,13 +119,9 @@ Figure3D drawLSystem3D(LParser::LSystem3D &lSystem3D, img::Color &color) {
 //
 //    }
 
-    std::cerr << s << std::endl;
     figure.setColor(color);
     figure.setFaces(faces);
     figure.setPoints(points);
-    for(Face face : figure.getFaces()){
-        std::cerr << face.getPointIndices()[0] << ':' << face.getPointIndices()[1] <<std::endl;
-    }
     return figure;
 }
 
@@ -136,6 +132,9 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
     if (iterations > 0){
         iterations--;
         for(char c : s){
+//            std::cerr << "H: " << H << std::endl;
+//            std::cerr << "L: " << L << std::endl;
+//            std::cerr << "U: " << U << std::endl;
             std::string specialChars = "+-^&\\/|()";
             if (specialChars.find(c) == std::string::npos){
                 LSystem3Dstep(lsystem, faces, point, H, L, U, iterations,
@@ -204,6 +203,9 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
     }
     else{
         for(char c : s){
+            std::cerr << "H: " << H << std::endl;
+            std::cerr << "L: " << L << std::endl;
+            std::cerr << "U: " << U << std::endl;
             if (c == '+'){
                 double delta = toRadial(lsystem.get_angle());
                 Vector3D newH = H*cos(delta) + L*sin(delta);
