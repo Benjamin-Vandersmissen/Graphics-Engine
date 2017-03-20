@@ -74,7 +74,8 @@ Lines2D doProjection(const Figures3D &figures, bool ZBuffering) {
             for(int i = 0; i < face.getPointIndices().size(); i++){
                 //connect all points from the face
                 int size = face.getPointIndices().size();
-                Line2D line(points[face.getPointIndices()[i]-1], points[face.getPointIndices()[(i+1)%size]-1], figure.getColor());
+                Line2D line(points[face.getPointIndices()[i]], points[face.getPointIndices()[(i+1)%size]
+                ], figure.getColor());
                 if (ZBuffering){
                     line.z1 = figure.getPoints()[face.getPointIndices()[i]-1].z;
                     line.z2 = figure.getPoints()[face.getPointIndices()[(i+1)%size]-1].z;
@@ -139,7 +140,7 @@ Vector3D Figure3D::getCenter(int face) {
     }
     Vector3D point = Vector3D::point(0,0,0);
     for(int index: this->Faces[face].getPointIndices()){
-        point += this->Points[index-1];
+        point += this->Points[index];
     }
     point /= this->Faces[face].getPointIndices().size();
     return point;

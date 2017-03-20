@@ -150,7 +150,7 @@ Figure3D WireFrameParser::parseCube(img::Color &color) {
                                    Vector3D::point(1,1,-1), Vector3D::point(-1,-1,-1), Vector3D::point(1,-1,1), Vector3D::point(-1,1,1)};
     figure.setPoints(points);
     figure.setColor(color);
-    std::vector<Face> faces = {Face({1,5,3,7}),Face({5,2,8,3}), Face({2,6,4,8}), Face({6,1,7,4}), Face({7,3,8,4}), Face({1,6,2,5})};
+    std::vector<Face> faces = {Face({0,4,2,6}),Face({4,1,7,2}), Face({1,5,3,7}), Face({5,0,6,3}), Face({6,2,7,3}), Face({0,5,1,4})};
     figure.setFaces(faces);
     return figure;
 }
@@ -159,7 +159,7 @@ Figure3D WireFrameParser::parseTetrahedron(img::Color &color) {
     Figure3D figure;
     std::vector<Vector3D> points = {Vector3D::point(1,-1,-1), Vector3D::point(-1,1,-1), Vector3D::point(1,1,1), Vector3D::point(-1,-1,1)};
     figure.setPoints(points);
-    std::vector<Face> faces = {Face({1,2,3}), Face({2,4,3}), Face({1,4,2}), Face({1,3,4})};
+    std::vector<Face> faces = {Face({0,1,2}), Face({1,3,2}), Face({0,3,1}), Face({0,2,3})};
     figure.setFaces(faces);
     figure.setColor(color);
     return figure;
@@ -170,8 +170,8 @@ Figure3D WireFrameParser::parseOctahedron(img::Color &color) {
     std::vector<Vector3D> points = {Vector3D::point(1,0,0), Vector3D::point(0,1,0), Vector3D::point(-1,0,0), Vector3D::point(0,-1,0),
                                     Vector3D::point(0,0,-1), Vector3D::point(0,0,1)};
     figure.setPoints(points);
-    std::vector<Face> faces = {Face({1,2,6}), Face({2,3,6}), Face({3,4,6}), Face({4,1,6}),
-                               Face({2,1,5}), Face({3,2,5}), Face({4,3,5}), Face({1,4,5})};
+    std::vector<Face> faces = {Face({0,1,5}), Face({1,2,5}), Face({2,3,5}), Face({3,0,5}),
+                               Face({2,1,5}), Face({2,1,4}), Face({3,2,4}), Face({0,3,4})};
     figure.setFaces(faces);
     figure.setColor(color);
     return figure;
@@ -192,10 +192,10 @@ Figure3D WireFrameParser::parseIcosahedron(img::Color &color) {
     }
     points.push_back(Vector3D::point(0,0,-sqrt(5)/2));
     figure.setPoints(points);
-    std::vector<Face> faces = {Face({1,2,3}), Face({1,3,4}), Face({1,4,5}), Face({1,5,6}), Face({1,6,2}),
-                               Face({2,7,3}), Face({3,7,8}), Face({3,8,4}), Face({4,8,9}), Face({4,9,5}),
-                               Face({5,9,10}), Face({5,10,6}), Face({6,10,11}), Face({6,11,2}), Face({2,11,7}),
-                               Face({12,8,7}), Face({12,9,8}), Face({12,10,9}), Face({12,11,10}), Face({12,7,11})};
+    std::vector<Face> faces = {Face({0,1,2}), Face({0,2,3}), Face({0,3,4}), Face({0,4,5}), Face({0,5,1}),
+                               Face({1,6,2}), Face({2,6,7}), Face({2,7,3}), Face({3,7,8}), Face({3,8,4}),
+                               Face({4,8,9}), Face({4,9,5}), Face({5,9,10}), Face({5,10,1}), Face({1,10,6}),
+                               Face({11,7,6}), Face({11,8,7}), Face({11,9,8}), Face({11,10,9}), Face({11,6,10})};
     figure.setFaces(faces);
     figure.setColor(color);
     return figure;
@@ -209,10 +209,10 @@ Figure3D WireFrameParser::parseDodecahedron(img::Color &color) {
         points.push_back(figure.getCenter(i));
     }
     figure2.setPoints(points);
-    std::vector<Face> faces = {Face({1,2,3,4,5}), Face({1,6,7,8,2}), Face({2,8,9,10,3}), Face({3,10,11,12,4}),
-                               Face({4,12,13,14,5}), Face({5,14,15,6,1}), Face({20,19,18,17,16}),
-                               Face({20,15,14,13,19}), Face({19,13,12,11,18}), Face({18,11,10,9,17}),
-                               Face({17,9,8,7,16}), Face({16,7,6,15,20})};
+    std::vector<Face> faces = {Face({0,1,2,3,4}), Face({0,5,6,7,1}), Face({1,7,8,9,2}), Face({2,9,10,11,3}),
+                               Face({3,11,12,13,4}), Face({4,13,14,5,0}), Face({19,18,17,16,15}),
+                               Face({19,14,13,12,18}), Face({18,12,11,10,17}), Face({17,10,9,8,16}),
+                               Face({16,8,7,6,15}), Face({15,6,5,14,19})};
 
     figure2.setFaces(faces);
     figure2.setColor(color);
@@ -229,8 +229,8 @@ Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std
     std::vector<int> circleIndices = {};
     for(int i = 0; i < n; i++){
         points.push_back(Vector3D::point(cos(2*i*M_PI/n), sin(2*i*M_PI/n) , 0));
-        faces.push_back(Face({i+1, (i+1)%(n+1)+1, n+1}));
-        circleIndices.insert(circleIndices.begin(), i+1);
+        faces.push_back(Face({i, (i+1)%n, n}));
+        circleIndices.insert(circleIndices.begin(), i);
     }
     faces.push_back(Face(circleIndices));
     points.push_back(top);
@@ -242,7 +242,7 @@ Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std
 
 Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration, std::string &name, img::Color &color) {
     double height = configuration[name]["height"].as_double_or_die();
-    int n = configuration[name]["n"].as_int_or_die();
+    int n = 2*configuration[name]["n"].as_int_or_die();
     Figure3D figure;
     std::vector<Vector3D> points = {};
     std::vector<Face> faces = {};
@@ -251,8 +251,8 @@ Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration,
     for(int i = 0; i < n; i ++){
         if (i < n/2) {
             points.push_back(Vector3D::point(cos(4 * i * M_PI / n), sin(4 * i * M_PI / n), 0));
-            faces.push_back(Face({i + 1, (i + 1) % (n / 2) + 1, i + n/2 + 1, n/2 + (i + 1) % (n / 2)}));
-            circleIndices.insert(circleIndices.begin(), i + 1);
+            faces.push_back(Face({i, i + n/2, (i+1)%(n/2) + n/2 , (i+1)%(n/2)}));
+            circleIndices.insert(circleIndices.begin(), i);
         }
         if (i == n/2){
             faces.push_back(Face(circleIndices));
@@ -278,7 +278,7 @@ Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, s
         for (Face face : figure.getFaces()) {
             std::vector<Vector3D> faceInPoints;
             for (int i :face.getPointIndices()) {
-                faceInPoints.push_back(figure.getPoints()[i - 1]);
+                faceInPoints.push_back(figure.getPoints()[i]);
             }
             facesInPoints.push_back(faceInPoints);
         }
@@ -304,9 +304,9 @@ Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, s
                 auto it = std::find(points.begin(), points.end(), point);
                 if (it == points.end()) {
                     points.push_back(point);
-                    indices.push_back(points.size());
+                    indices.push_back(points.size()-1);
                 } else {
-                    indices.push_back(std::distance(points.begin(), it) + 1);
+                    indices.push_back(std::distance(points.begin(), it));
                 }
             }
             faces.push_back(Face(indices));
@@ -339,7 +339,7 @@ Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, st
             double v = 2*j*M_PI/m;
             Vector3D point = Vector3D::point((R+r*cos(v))*cos(u), (R+r*cos(v))*sin(u), r*sin(v));
             points.push_back(point);
-            faces.push_back(Face({m*i+j + 1, m*((i+1)%n) + j + 1, m*((i+1)%n) + (j+1)%m + 1, m*i + (j+1)%m + 1}));
+            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
         }
     }
     figure.setColor(color);
@@ -370,7 +370,7 @@ Figure3D WireFrameParser::parseMobius(const ini::Configuration &configuration, s
             double v = 2*j*M_PI/m;
             Vector3D point = Vector3D::point((1+v/2*cos(u/2))*cos(u), (1+v/2*cos(u/2))*sin(u), v/2*sin(u/2));
             points.push_back(point);
-            faces.push_back(Face({m*i+j + 1, m*((i+1)%n) + j + 1, m*((i+1)%n) + (j+1)%m + 1, m*i + (j+1)%m + 1}));
+            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
         }
     }
     figure.setColor(color);
@@ -393,7 +393,7 @@ Figure3D WireFrameParser::parseNavelTorus(const ini::Configuration &configuratio
             double v = 2*j*M_PI/m;
             Vector3D point = Vector3D::point(sin(u)*(7+cos(u/3-2*v) + 2* cos(u/3+v)), cos(u)*(7+cos(u/3-2*v) + 2* cos(u/3+v)), sin(u/3-2*v)+2*sin(u/3+v));
             points.push_back(point);
-            faces.push_back(Face({m*i+j + 1, m*((i+1)%n) + j + 1, m*((i+1)%n) + (j+1)%m + 1, m*i + (j+1)%m + 1}));
+            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
         }
     }
     figure.setColor(color);
