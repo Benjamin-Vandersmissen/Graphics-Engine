@@ -57,15 +57,15 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, bool Z
         else if (type == "Torus"){
             figures.push_back(this->parseTorus(configuration, name, color));
         }
-        else if (type == "Mobius"){
-            figures.push_back(this->parseMobius(configuration, name, color));
-        }
+//        else if (type == "Mobius"){
+//            figures.push_back(this->parseMobius(configuration, name, color));
+//        }
         else if (type == "3DLSystem"){
             figures.push_back(this->parse3DLsystem(configuration, name, color));
         }
-        else if (type == "NavelTorus"){
-            figures.push_back(this->parseNavelTorus(configuration, name, color));
-        }
+//        else if (type == "NavelTorus"){
+//            figures.push_back(this->parseNavelTorus(configuration, name, color));
+//        }
 
 
         m = scaleFigure(scale);
@@ -273,51 +273,63 @@ Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration,
 Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, std::string &name, img::Color &color) {
     int n = configuration[name]["n"].as_int_or_die();
     Figure3D figure = parseIcosahedron(color);
-    for (int j = 0; j < n; j++) {
-        std::vector<std::vector<Vector3D>> facesInPoints = {};
-        for (Face face : figure.getFaces()) {
-            std::vector<Vector3D> faceInPoints;
-            for (int i :face.getPointIndices()) {
-                faceInPoints.push_back(figure.getPoints()[i]);
+    for (int j = 0; j < n; j++) { //repeat the process n times
+        std::vector<Vector3D> test = {};
+        std::vector<Face> facesTest = {};
+        for (Face face1 : figure.getFaces()) {
+            Vector3D punt1 = figure.getPoints()[face1.getPointIndices()[0]];
+            Vector3D punt2 = figure.getPoints()[face1.getPointIndices()[1]];
+            Vector3D punt3 = figure.getPoints()[face1.getPointIndices()[2]];
+            Vector3D punt4 = (punt1 + punt2) / 2;
+            Vector3D punt5 = (punt2 + punt3) / 2;
+            Vector3D punt6 = (punt1 + punt3) / 2;
+            int index1, index2, index3, index4, index5, index6;
+            if (std::find(test.begin(), test.end(), punt1) == test.end()) {
+                index1 = test.size();
+                test.push_back(punt1);
+            } else {
+                index1 = std::distance(test.begin(), std::find(test.begin(), test.end(), punt1));
             }
-            facesInPoints.push_back(faceInPoints);
-        }
-        std::vector<std::vector<Vector3D>> newFaces = {};
-        for (std::vector<Vector3D> face : facesInPoints) {
-            std::vector<Vector3D> face2;
-            face2 = {face[0], (face[0] + face[2]) / 2, (face[0] + face[1]) / 2};
-            newFaces.push_back(face2);
-            face2 = {face[1], (face[1] + face[0]) / 2, (face[1] + face[2]) / 2};
-            newFaces.push_back(face2);
-            face2 = {(face[1] + face[2]) / 2, face[2], (face[0] + face[2]) / 2};
-            newFaces.push_back(face2);
-            face2 = {(face[0] + face[1]) / 2, (face[1] + face[2]) / 2, (face[0] + face[2]) / 2};
-            newFaces.push_back(face2);
-        }
-
-        std::vector<Vector3D> points = {};
-        std::vector<Face> faces = {};
-
-        for (std::vector<Vector3D> faceInPoints : newFaces) {
-            std::vector<int> indices = {};
-            for (Vector3D point : faceInPoints) {
-                auto it = std::find(points.begin(), points.end(), point);
-                if (it == points.end()) {
-                    points.push_back(point);
-                    indices.push_back(points.size()-1);
-                } else {
-                    indices.push_back(std::distance(points.begin(), it));
-                }
+            if (std::find(test.begin(), test.end(), punt2) == test.end()) {
+                index2 = test.size();
+                test.push_back(punt2);
+            } else {
+                index2 = std::distance(test.begin(), std::find(test.begin(), test.end(), punt2));
             }
-            faces.push_back(Face(indices));
+            if (std::find(test.begin(), test.end(), punt3) == test.end()) {
+                index3 = test.size();
+                test.push_back(punt3);
+            } else {
+                index3 = std::distance(test.begin(), std::find(test.begin(), test.end(), punt3));
+            }
+            if (std::find(test.begin(), test.end(), punt4) == test.end()) {
+                index4 = test.size();
+                test.push_back(punt4);
+            } else {
+                index4 = std::distance(test.begin(), std::find(test.begin(), test.end(), punt4));
+            }
+            if (std::find(test.begin(), test.end(), punt5) == test.end()) {
+                index5 = test.size();
+                test.push_back(punt5);
+            } else {
+                index5 = std::distance(test.begin(), std::find(test.begin(), test.end(), punt5));
+            }
+            if (std::find(test.begin(), test.end(), punt6) == test.end()) {
+                index6 = test.size();
+                test.push_back(punt6);
+            } else {
+                index6 = std::distance(test.begin(), std::find(test.begin(), test.end(), punt6));
+            }
+            facesTest.push_back(Face({index1, index4, index6}));
+            facesTest.push_back(Face({index2, index4, index5}));
+            facesTest.push_back(Face({index3, index5, index6}));
+            facesTest.push_back(Face({index4, index5, index6}));
         }
-        figure.setColor(color);
-        figure.setFaces(faces);
-        figure.setPoints(points);
+        figure.setPoints(test);
+        figure.setFaces(facesTest);
     }
-
     std::vector<Vector3D> points = figure.getPoints();
-    for(Vector3D& point : points){
+    for (Vector3D &point : points) {
         point /= point.length();
         point.normalise();
     }
@@ -331,8 +343,8 @@ Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, st
     double R = configuration[name]["R"].as_double_or_die();
     int m = configuration[name]["m"].as_int_or_die();
     int n = configuration[name]["n"].as_int_or_die();
-    std::vector<Vector3D> points;
-    std::vector<Face> faces;
+    std::vector<Vector3D> points = {};
+    std::vector<Face> faces = {};
     for(int i = 0 ; i < n; i++){
         for(int j = 0; j < m; j++){
             double u = 2*i*M_PI/n;
@@ -355,49 +367,49 @@ WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::st
     Figure3D figure = drawLSystem3D(Lsystem, color);
     return figure;
 }
-
-Figure3D WireFrameParser::parseMobius(const ini::Configuration &configuration, std::string &name, img::Color &color) {
-    Figure3D figure;
-    double r = configuration[name]["r"].as_double_or_die();
-    double R = configuration[name]["R"].as_double_or_die();
-    int m = configuration[name]["m"].as_int_or_die();
-    int n = configuration[name]["n"].as_int_or_die();
-    std::vector<Vector3D> points;
-    std::vector<Face> faces;
-    for(int i = 0 ; i < n; i++){
-        for(int j = 0; j < m; j++){
-            double u = 2*i*M_PI/n;
-            double v = 2*j*M_PI/m;
-            Vector3D point = Vector3D::point((1+v/2*cos(u/2))*cos(u), (1+v/2*cos(u/2))*sin(u), v/2*sin(u/2));
-            points.push_back(point);
-            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
-        }
-    }
-    figure.setColor(color);
-    figure.setFaces(faces);
-    figure.setPoints(points);
-    return figure;
-}
-
-Figure3D WireFrameParser::parseNavelTorus(const ini::Configuration &configuration, std::string &name, img::Color &color) {
-    Figure3D figure;
-    double r = configuration[name]["r"].as_double_or_die();
-    double R = configuration[name]["R"].as_double_or_die();
-    int m = configuration[name]["m"].as_int_or_die();
-    int n = configuration[name]["n"].as_int_or_die();
-    std::vector<Vector3D> points;
-    std::vector<Face> faces;
-    for(int i = 0 ; i < n; i++){
-        for(int j = 0; j < m; j++){
-            double u = 2*i*M_PI/n;
-            double v = 2*j*M_PI/m;
-            Vector3D point = Vector3D::point(sin(u)*(7+cos(u/3-2*v) + 2* cos(u/3+v)), cos(u)*(7+cos(u/3-2*v) + 2* cos(u/3+v)), sin(u/3-2*v)+2*sin(u/3+v));
-            points.push_back(point);
-            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
-        }
-    }
-    figure.setColor(color);
-    figure.setFaces(faces);
-    figure.setPoints(points);
-    return figure;
-}
+//
+//Figure3D WireFrameParser::parseMobius(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+//    Figure3D figure;
+//    double r = configuration[name]["r"].as_double_or_die();
+//    double R = configuration[name]["R"].as_double_or_die();
+//    int m = configuration[name]["m"].as_int_or_die();
+//    int n = configuration[name]["n"].as_int_or_die();
+//    std::vector<Vector3D> points;
+//    std::vector<Face> faces;
+//    for(int i = 0 ; i < n; i++){
+//        for(int j = 0; j < m; j++){
+//            double u = 2*i*M_PI/n;
+//            double v = 2*j*M_PI/m;
+//            Vector3D point = Vector3D::point((1+v/2*cos(u/2))*cos(u), (1+v/2*cos(u/2))*sin(u), v/2*sin(u/2));
+//            points.push_back(point);
+//            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
+//        }
+//    }
+//    figure.setColor(color);
+//    figure.setFaces(faces);
+//    figure.setPoints(points);
+//    return figure;
+//}
+//
+//Figure3D WireFrameParser::parseNavelTorus(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+//    Figure3D figure;
+//    double r = configuration[name]["r"].as_double_or_die();
+//    double R = configuration[name]["R"].as_double_or_die();
+//    int m = configuration[name]["m"].as_int_or_die();
+//    int n = configuration[name]["n"].as_int_or_die();
+//    std::vector<Vector3D> points;
+//    std::vector<Face> faces;
+//    for(int i = 0 ; i < n; i++){
+//        for(int j = 0; j < m; j++){
+//            double u = 2*i*M_PI/n;
+//            double v = 2*j*M_PI/m;
+//            Vector3D point = Vector3D::point(sin(u)*(7+cos(u/3-2*v) + 2* cos(u/3+v)), cos(u)*(7+cos(u/3-2*v) + 2* cos(u/3+v)), sin(u/3-2*v)+2*sin(u/3+v));
+//            points.push_back(point);
+//            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
+//        }
+//    }
+//    figure.setColor(color);
+//    figure.setFaces(faces);
+//    figure.setPoints(points);
+//    return figure;
+//}
