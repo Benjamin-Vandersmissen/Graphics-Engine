@@ -199,8 +199,8 @@ void img::EasyImage::clear_gradient(img::Color color1, img::Color color2) {
     for(int i = 0; i <  this->width; i ++){
         for(int j = 0; j < this->height; j++){
             (*this)(i,j).red = color1.red + i*((double)(color2.red-color1.red))/(this->width-1);
-            (*this)(i,j).green = color1.green + j*((double)(color2.green-color1.green))/(this->height-1);
-            (*this)(i,j).blue = color1.blue + (i*((double)(color2.blue-color1.blue))/(this->width-1) + j*((double)(color2.blue-color1.blue))/(this->height-1))/2;
+            (*this)(i,j).green = color1.green + i*((double)(color2.green-color1.green))/(this->width-1);
+            (*this)(i,j).blue = color1.blue + i*((double)(color2.blue-color1.blue))/(this->width-1);
         }
     }
 }
