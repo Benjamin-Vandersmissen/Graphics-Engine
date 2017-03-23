@@ -25,7 +25,7 @@ Line2D::Line2D(double x1, double y1, double x2, double y2, img::Color color) : p
 Line2D::Line2D() {}
 
 img::EasyImage
-draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool rainbow, bool ZBuffering) {
+draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool ZBuffering) {
     double Xmin = lines.front().point1.x, Xmax = lines.front().point1.x, Ymin = lines.front().point1.y, Ymax = lines.front().point1.y;
     for(Line2D line: lines){
         Xmin = std::min(Xmin, std::min(line.point1.x,line.point2.x));
@@ -49,12 +49,16 @@ draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool rain
         line.point1.y = roundToInt(d*line.point1.y+dy);
         line.point2.y = roundToInt(d*line.point2.y+dy);
         if (ZBuffering){
-            draw_zbuf_line(buffer, image, line.point1.x, line.point1.y, line.z1, line.point2.x , line.point2.y, line.z2, line.color);
+            if (!line.rainbow)
+                draw_zbuf_line(buffer, image, line.point1.x, line.point1.y, line.z1, line.point2.x, line.point2.y,
+                               line.z2, line.color);
+            else
+                draw_zbuf_line_rainbow(buffer, image, line.point1.x, line.point1.y, line.z1, line.point2.x, line.point2.y, line.z2);
         }
-        else if (!rainbow )
-        image.draw_line(line.point1.x, line.point1.y, line.point2.x, line.point2.y, line.color);
+        else if (!line.rainbow )
+            image.draw_line(line.point1.x, line.point1.y, line.point2.x, line.point2.y, line.color);
         else
-        image.draw_line_rainbow(line.point1.x, line.point1.y, line.point2.x, line.point2.y);
+            image.draw_line_rainbow(line.point1.x, line.point1.y, line.point2.x, line.point2.y);
     }
     return image;
 }
@@ -95,9 +99,6 @@ void draw_zbuf_line(ZBuffer &buffer, img::EasyImage &image,  unsigned int x0,  u
                 buffer[i][x0] = 1/z;
                 image(x0, i) = color;
             }
-            else {
-                //std::cerr << buffer[i][x0] << ' ' << 1/z << std::endl;
-            }
         }
     }
     else if (y0 == y1)
@@ -113,8 +114,6 @@ void draw_zbuf_line(ZBuffer &buffer, img::EasyImage &image,  unsigned int x0,  u
             if (buffer[y0][i] > 1/z) {
                 buffer[y0][i] = 1/z;
                 image(i, y0) = color;
-            }
-            else{
             }
         }
     }
@@ -135,8 +134,6 @@ void draw_zbuf_line(ZBuffer &buffer, img::EasyImage &image,  unsigned int x0,  u
                 if (buffer[(unsigned int) round(y0 + m * i)][x0+i] > 1/z ) {
                     buffer[(unsigned int) round(y0 + m * i)][x0+i] = 1/z;
                     image(x0 + i, (unsigned int) round(y0 + m * i)) = color;
-                }else{
-                    //std::cerr << buffer[x0+i][(unsigned int) round(y0 + m * i)] << ' ' << 1/z << std::endl;
                 }
             }
         }
@@ -148,9 +145,6 @@ void draw_zbuf_line(ZBuffer &buffer, img::EasyImage &image,  unsigned int x0,  u
                 if(buffer[y0+i][(unsigned int) round(x0 +(i / m))] > 1/z) {
                     buffer[y0+i][(unsigned int) round(x0 +(i / m))] = 1/z;
                     image((unsigned int) round(x0 + (i / m)), y0 + i) = color;
-                }else{
-//                    std::cerr << buffer[y0+i][(unsigned int) round(x0 +(i / m))] << ' ' << 1/z << std::endl;
-
                 }
             }
         }
@@ -162,8 +156,93 @@ void draw_zbuf_line(ZBuffer &buffer, img::EasyImage &image,  unsigned int x0,  u
                 if (buffer[y0-i][(unsigned int) round(x0 - (i / m))] > 1/z){
                     buffer[y0-i][(unsigned int) round(x0 - (i / m))] = 1/z;
                     image((unsigned int) round(x0 - (i / m)), y0 - i) = color;
-                }else{
-//                    std::cerr << buffer[y0-i][(unsigned int) round(x0 - (i / m))] << ' ' << 1/z << std::endl;
+                }
+            }
+        }
+    }
+}
+void draw_zbuf_line_rainbow(ZBuffer &buffer, img::EasyImage &image, unsigned int x0, unsigned int y0, const double z0,
+                            unsigned int x1, unsigned int y1, const double z1) {
+    assert(x0 < image.get_width() && y0 < image.get_height());
+    assert(x1 < image.get_width() && y1 < image.get_height());
+
+
+    if (x0 == x1)
+    {
+        unsigned int ymin = std::min(y0,y1);
+        unsigned int ymax = std::max(y0,y1);
+        double zmin = (ymin == y0) ? z0 : z1;
+        double zmax = (ymax == y0) ? z0 : z1;
+        //special case for x0 == x1
+        for (unsigned int i = ymin; i <= ymax; i++)
+        {
+            double z = zmin + (i-ymin)*(zmax-zmin)/(ymax-ymin);
+            if (buffer[i][x0] > 1/z) {
+                buffer[i][x0] = 1/z;
+                img::Color color = img::Color(256*(double)x0/image.get_width(), 256*(double)i/image.get_height(), 256*((double)i/image.get_height() + (double)x0/image.get_width()));
+                image(x0, i) = color;
+            }
+        }
+    }
+    else if (y0 == y1)
+    {
+        unsigned int xmin = std::min(x0,x1);
+        unsigned int xmax = std::max(x0,x1);
+        double zmin = (xmin == x0) ? z0 : z1;
+        double zmax = (xmax == x0) ? z0 : z1;
+        //special case for y0 == y1
+        for (unsigned int i = xmin; i <= xmax; i++)
+        {
+            double z = zmin + (i-xmin)*(zmax-zmin)/(xmax-xmin);
+            if (buffer[y0][i] > 1/z) {
+                buffer[y0][i] = 1/z;
+                img::Color color = img::Color(256*(double)i/image.get_width(), 256*(double)y0/image.get_height(), 256*((double)y0/image.get_height() + (double)i/image.get_width()));
+                image(i, y0) = color;
+            }
+        }
+    }
+    else
+    {
+        if (x0 > x1)
+        {
+            //flip points if x1>x0: we want x0 to have the lowest value
+            std::swap(x0, x1);
+            std::swap(y0, y1);
+        }
+        double m = ((double) y1 - (double) y0) / ((double) x1 - (double) x0);
+        if (-1.0 <= m && m <= 1.0)
+        {
+            for (unsigned int i = 0; i <= (x1 - x0); i++)
+            {
+                double z = z0 + i*(z1-z0)/(x1-x0);
+                if (buffer[(unsigned int) round(y0 + m * i)][x0+i] > 1/z ) {
+                    buffer[(unsigned int) round(y0 + m * i)][x0+i] = 1/z;
+                    img::Color color = img::Color(256*(double)(x0+i)/image.get_width(), 256*(double)(y0+m*i)/image.get_height(), 256*((double)(y0+m*i)/image.get_height() + (double)(x0+i)/image.get_width()));
+                    image(x0 + i, (unsigned int) round(y0 + m * i)) = color;
+                }
+            }
+        }
+        else if (m > 1.0)
+        {
+            for (unsigned int i = 0; i <= (y1 - y0); i++)
+            {
+                double z = z0 + i*(z1-z0)/(y1-y0);
+                if(buffer[y0+i][(unsigned int) round(x0 +(i / m))] > 1/z) {
+                    buffer[y0+i][(unsigned int) round(x0 +(i / m))] = 1/z;
+                    img::Color color = img::Color(256*(double)(x0+i/m)/image.get_width(), 256*(double)(y0+i)/image.get_height(), 256*((double)(y0+i)/image.get_height() + (double)(x0+i/m)/image.get_width()));
+                    image((unsigned int) round(x0 + (i / m)), y0 + i) = color;
+                }
+            }
+        }
+        else if (m < -1.0)
+        {
+            for (unsigned int i = 0; i <= (y0 - y1); i++)
+            {
+                double z = z0 + i*(z1-z0)/(y0-y1);
+                if (buffer[y0-i][(unsigned int) round(x0 - (i / m))] > 1/z){
+                    buffer[y0-i][(unsigned int) round(x0 - (i / m))] = 1/z;
+                    img::Color color = img::Color(256*(double)(x0-i/m)/image.get_width(), 256*(double)(y0-i)/image.get_height(), 256*((double)(y0-i)/image.get_height() + (double)(x0-i/m)/image.get_width()));
+                    image((unsigned int) round(x0 - (i / m)), y0 - i) = color;
                 }
             }
         }

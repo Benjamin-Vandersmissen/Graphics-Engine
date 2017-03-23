@@ -55,7 +55,7 @@ img::EasyImage drawLSystem2D(LParser::LSystem2D &lSystem2D, img::Color &bgColor,
     LSystem2Dstep(lSystem2D, color, x, y, angle, lines, lSystem2D.get_nr_iterations(),
                   lSystem2D.get_initiator(), brackets);
 
-    img::EasyImage image = draw2DLines(lines, size, bgColor, rainbow);
+    img::EasyImage image = draw2DLines(lines, size, bgColor, false);
     return image;
 }
 

@@ -76,6 +76,7 @@ Lines2D doProjection(const Figures3D &figures, bool ZBuffering) {
                 int size = face.getPointIndices().size();
                 Line2D line(points[face.getPointIndices()[i]], points[face.getPointIndices()[(i+1)%size]
                 ], figure.getColor());
+                line.rainbow = figure.rainbow;
                 if (ZBuffering){
                     line.z1 = figure.getPoints()[face.getPointIndices()[i]-1].z;
                     line.z2 = figure.getPoints()[face.getPointIndices()[(i+1)%size]-1].z;

@@ -24,6 +24,8 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, bool Z
         CenterPoint = Vector3D::point(CenterCoords[0], CenterCoords[1], CenterCoords[2]);
         img::Color color = img::Color(extractColor(configuration[name.c_str()]["color"].as_double_tuple_or_die()));
 
+        bool rainbow = configuration[name.c_str()]["rainbow"].as_bool_or_default(false);
+
         Matrix m;
 
         Vector3D vec;
@@ -66,7 +68,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, bool Z
 //        else if (type == "NavelTorus"){
 //            figures.push_back(this->parseNavelTorus(configuration, name, color));
 //        }
-
+        figures.back().rainbow = rainbow;
 
         m = scaleFigure(scale);
         figures.back().applyTransformation(m); //apply scaling
@@ -107,7 +109,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, bool Z
     applyTransformation(figures, eyeMatrix);
     Lines2D lines = doProjection(figures, ZBuffering);
     img::EasyImage image;
-    image = draw2DLines(lines, size, bgcolor,false, ZBuffering);
+    image = draw2DLines(lines, size, bgcolor, ZBuffering);
     this->image = image;
 }
 

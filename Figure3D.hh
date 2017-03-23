@@ -29,6 +29,8 @@ private:
     std::vector<Vector3D> Points;
     img::Color color;
 public:
+    bool rainbow = false;
+
     const std::vector<Face> &getFaces() const;
 
     void setFaces(const std::vector<Face> &Faces);
