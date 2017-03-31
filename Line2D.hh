@@ -31,12 +31,16 @@ public:
 
     double z1;
     double z2;
+
     bool rainbow = false;
 
     Line2D(const Point2D &point1, const Point2D &point2, img::Color color);
     Line2D(double x1, double y1, double x2, double y2, img::Color color);
 
     Line2D();
+
+    double getY(double x);
+    double getX(double y);
 };
 
 typedef std::vector<Line2D> Lines2D;

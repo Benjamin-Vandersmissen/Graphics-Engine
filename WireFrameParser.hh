@@ -16,12 +16,12 @@ class WireFrameParser {
 private:
     std::vector<Figure3D> figures;
     img::EasyImage image;
-    bool ZBuffering;
+    unsigned int ZBuffering;
 public:
     const img::EasyImage &getImage() const;
 
 public:
-    WireFrameParser(const ini::Configuration &configuration, bool ZBuffering = false);
+    WireFrameParser(const ini::Configuration &configuration, unsigned int ZBuffering = 0);
     Figure3D parseLinedrawing(const ini::Configuration &configuration, std::string &name, img::Color &color);
     Figure3D parseCube(img::Color &color);
     Figure3D parseTetrahedron(img::Color& color);

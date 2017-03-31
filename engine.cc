@@ -40,7 +40,11 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
     }
 
     else if (type == "ZBufferedWireframe"){
-        WireFrameParser parser(configuration, true);
+        WireFrameParser parser(configuration, 1);
+        image = parser.getImage();
+    }
+    else if (type == "ZBuffering"){
+        WireFrameParser parser(configuration, 2);
         image = parser.getImage();
     }
 	return image;

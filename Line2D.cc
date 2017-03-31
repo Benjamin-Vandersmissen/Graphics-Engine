@@ -24,6 +24,20 @@ Line2D::Line2D(double x1, double y1, double x2, double y2, img::Color color) : p
 
 Line2D::Line2D() {}
 
+double Line2D::getY(double x) {
+    if ((x > point1.x && x > point2.x )||(x < point1.x && x < point2.x) || (x == point1.x && x == point2.x)){
+        throw std::invalid_argument("invalid X value");
+    }
+    return point1.y + (x-point1.x)/(point2.x-point1.x)*(point2.y-point1.y);
+}
+
+double Line2D::getX(double y) {
+    if ((y > point1.y && y > point2.y )||(y < point1.y && y < point2.y) || (y == point1.y && y == point2.y)){
+        throw std::invalid_argument("invalid Y value");
+    }
+    return point1.x + (y-point1.y)/(point2.y-point1.y)*(point2.x-point1.x);
+}
+
 img::EasyImage
 draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool ZBuffering) {
     double Xmin = lines.front().point1.x, Xmax = lines.front().point1.x, Ymin = lines.front().point1.y, Ymax = lines.front().point1.y;
@@ -35,7 +49,7 @@ draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool ZBuf
     }
     double Imagex = size * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
     double Imagey = size * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
-    img::EasyImage image(roundToInt(Imagex), roundToInt(Imagey), bgColor);
+    img::EasyImage image(Imagex, Imagey, bgColor);
     ZBuffer buffer(roundToInt(Imagex), roundToInt(Imagey));
 
     double d = 0.95 * (Imagex/ (Xmax-Xmin));
@@ -44,6 +58,7 @@ draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool ZBuf
     double dx = (Imagex/2) - DCx;
     double dy = (Imagey/2) - DCy;
     for(Line2D line: lines){
+        std::cerr << "O: (" <<line.point1.x << ", " << line.point1.y << ") (" << line.point2.x << ", " << line.point2.y << ")" << std::endl;
         line.point1.x = roundToInt(d*line.point1.x+dx);
         line.point2.x = roundToInt(d*line.point2.x+dx);
         line.point1.y = roundToInt(d*line.point1.y+dy);
@@ -161,6 +176,8 @@ void draw_zbuf_line(ZBuffer &buffer, img::EasyImage &image,  unsigned int x0,  u
         }
     }
 }
+
+
 void draw_zbuf_line_rainbow(ZBuffer &buffer, img::EasyImage &image, unsigned int x0, unsigned int y0, const double z0,
                             unsigned int x1, unsigned int y1, const double z1) {
     assert(x0 < image.get_width() && y0 < image.get_height());
@@ -248,3 +265,4 @@ void draw_zbuf_line_rainbow(ZBuffer &buffer, img::EasyImage &image, unsigned int
         }
     }
 }
+

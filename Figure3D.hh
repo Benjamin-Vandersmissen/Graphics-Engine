@@ -20,7 +20,11 @@ public:
     Face(const std::vector<int> &pointIndices);
 
     const std::vector<int> &getPointIndices() const;
+
+    unsigned int operator[](unsigned int i) const;
 };
+
+std::vector<Face> triangulate(const Face& face);
 
 
 class Figure3D {
@@ -50,7 +54,11 @@ public:
     void applyTransformation(Matrix& matrix);
 
     Vector3D getCenter(int face);
+
+    Vector3D operator[](unsigned int i) const;
 };
+
+void triangulate(Figure3D& figure);
 
 typedef std::vector<Figure3D> Figures3D;
 
@@ -63,5 +71,8 @@ Matrix translateFigure(const Vector3D& vector);
 std::ostream& operator<<(std::ostream& stream, const Figure3D& figure);
 Lines2D doProjection(const Figures3D &figures, bool ZBuffering);
 Point2D doProjection(const Vector3D& point, const double d = 1);
+void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d, double dx,
+                        double dy, const img::Color &color);
+
 
 #endif //GRAPHICS_ENGINE_FIGURE3D_HH

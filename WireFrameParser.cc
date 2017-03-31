@@ -4,7 +4,7 @@
 
 #include "WireFrameParser.hh"
 
-WireFrameParser::WireFrameParser(const ini::Configuration &configuration, bool ZBuffering) : ZBuffering(ZBuffering) {
+WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsigned int ZBuffering) : ZBuffering(ZBuffering) {
     int size = configuration["General"]["size"].as_int_or_die();
     img::Color bgcolor = img::Color(extractColor(configuration["General"]["backgroundcolor"].as_double_tuple_or_die()));
     int nrFigures = configuration["General"]["nrFigures"].as_int_or_die();
@@ -107,9 +107,38 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, bool Z
     eyeMatrix(4,3) = -r;
 
     applyTransformation(figures, eyeMatrix);
-    Lines2D lines = doProjection(figures, ZBuffering);
+    Lines2D lines = doProjection(figures, ZBuffering != 0);
     img::EasyImage image;
-    image = draw2DLines(lines, size, bgcolor, ZBuffering);
+    if (ZBuffering < 2)
+        image = draw2DLines(lines, size, bgcolor, ZBuffering==1);
+    else if (ZBuffering == 2){
+        double Xmin = lines.front().point1.x, Xmax = lines.front().point1.x, Ymin = lines.front().point1.y, Ymax = lines.front().point1.y;
+        for(Line2D line: lines){
+            Xmin = std::min(Xmin, std::min(line.point1.x,line.point2.x));
+            Xmax = std::max(Xmax, std::max(line.point1.x,line.point2.x));
+            Ymin = std::min(Ymin, std::min(line.point1.y,line.point2.y));
+            Ymax = std::max(Ymax, std::max(line.point1.y,line.point2.y));
+        }
+        double Imagex = size * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+        double Imagey = size * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+        image = img::EasyImage(roundToInt(Imagex), roundToInt(Imagey), bgcolor);
+        ZBuffer buffer(roundToInt(Imagex), roundToInt(Imagey));
+        double d = 0.95 * (Imagex/ (Xmax-Xmin));
+        double DCx = d * (Xmin+Xmax)/2;
+        double DCy = d * (Ymin+Ymax)/2;
+        double dx = (Imagex/2) - DCx;
+        double dy = (Imagey/2) - DCy;
+        for (Figure3D& figure: figures){
+            triangulate(figure);
+//            std::cerr << figure.getFaces().size();
+            for(const Face& face : figure.getFaces()){
+                Vector3D pointA = figure[face[0]];
+                Vector3D pointB = figure[face[1]];
+                Vector3D pointC = figure[face[2]];
+                draw_zbuf_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy, figure.getColor());
+            }
+        }
+    }
     this->image = image;
 }
 
@@ -262,6 +291,7 @@ Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration,
         };
         if(i >= n/2){
             points.push_back(Vector3D::point(cos(4 * i * M_PI / n), sin(4 * i * M_PI / n), height));
+            circleIndices.insert(circleIndices.begin(), i);
         }
 
     }
@@ -269,6 +299,7 @@ Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration,
     figure.setColor(color);
     figure.setPoints(points);
     figure.setFaces(faces);
+//    std::cerr << "S: " << circleIndices.size() << std::endl;
     return figure;
 }
 
