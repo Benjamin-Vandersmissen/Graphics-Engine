@@ -178,7 +178,6 @@ std::ostream &operator<<(std::ostream &stream, const Figure3D& figure) {
 
 std::vector<Face> triangulate(const Face &face) {
     std::vector<Face> faces = {};
-//    std::cerr << face.getPointIndices().size() << std::endl;
     for(int i = 1; i < face.getPointIndices().size()-1; i ++){
         faces.push_back(Face({face.getPointIndices()[0], face.getPointIndices()[i], face.getPointIndices()[i+1]}));
     }
@@ -212,8 +211,8 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
     newC.x += dx;
     newC.y += dy;
 
-    int Ymin = round(std::min(newA.y, std::min(newB.y, newC.y)) + 0.5);
-    int Ymax = round(std::max(newA.y, std::max(newB.y, newC.y)) - 0.5);
+    int Ymin = round(std::min(newA.y, std::min(newB.y, newC.y))+0.5);
+    int Ymax = round(std::max(newA.y, std::max(newB.y, newC.y))-0.5);
 
     Line2D AB = {newA,newB, img::Color()};
     Line2D AC = {newA,newC, img::Color()};
@@ -221,11 +220,11 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
     Lines2D lines = {AB,AC,BC};
 
     img::Color color1 = color;
-    color1.blue = std::rand()%100;
-    color1.red = std::rand()%100;
-    color1.green = std::rand()%100;
+//    color1.blue = std::rand()%100 + 25;
+//    color1.red = std::rand()%100 + 25;
+//    color1.green = std::rand()%100 + 25;
 
-    for(int y = Ymin; y < Ymax; y++){
+    for(int y = Ymin; y <= Ymax; y++){
         double XL = std::numeric_limits<double>::infinity();
         double XR = -std::numeric_limits<double>::infinity();
         for(Line2D& l: lines){
@@ -238,7 +237,7 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
 
             }
         }
-        for(int x = roundToInt(XL); x < roundToInt(XR); x++){
+        for(int x = round(XL+0.5); x <= round(XR-0.5); x++){
             double ZGinverse = 1/(3*A.z) + 1/(3*B.z) + 1/(3*C.z);
             double XG = (newA.x+newB.x+newC.x)/3;
             double YG = (newA.y+newB.y+newC.y)/3;

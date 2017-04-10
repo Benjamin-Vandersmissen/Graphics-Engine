@@ -47,8 +47,8 @@ draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool ZBuf
         Ymin = std::min(Ymin, std::min(line.point1.y,line.point2.y));
         Ymax = std::max(Ymax, std::max(line.point1.y,line.point2.y));
     }
-    double Imagex = size * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
-    double Imagey = size * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+    unsigned int Imagex = roundToInt(size * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin))));
+    unsigned int Imagey = roundToInt(size * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin))));
     img::EasyImage image(Imagex, Imagey, bgColor);
     ZBuffer buffer(roundToInt(Imagex), roundToInt(Imagey));
 
@@ -58,7 +58,6 @@ draw2DLines(Lines2D &lines, const int size, const img::Color &bgColor, bool ZBuf
     double dx = (Imagex/2) - DCx;
     double dy = (Imagey/2) - DCy;
     for(Line2D line: lines){
-        std::cerr << "O: (" <<line.point1.x << ", " << line.point1.y << ") (" << line.point2.x << ", " << line.point2.y << ")" << std::endl;
         line.point1.x = roundToInt(d*line.point1.x+dx);
         line.point2.x = roundToInt(d*line.point2.x+dx);
         line.point1.y = roundToInt(d*line.point1.y+dy);
