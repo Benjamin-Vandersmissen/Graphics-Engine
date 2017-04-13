@@ -35,6 +35,9 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         else if(type == "Cube"){
             figures.push_back(this->parseCube(color));
         }
+        else if (type == "Cuboid"){
+            figures.push_back(this->parseCuboid(configuration, name, color));
+        }
         else if(type == "Tetrahedron"){
             figures.push_back(this->parseTetrahedron(color));
         }
@@ -398,6 +401,21 @@ WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::st
     std::string filename = configuration[name]["inputfile"].as_string_or_die();
     LParser::LSystem3D Lsystem = getLSystem3D(filename);
     Figure3D figure = drawLSystem3D(Lsystem, color);
+    return figure;
+}
+
+Figure3D WireFrameParser::parseCuboid(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+    double height = configuration[name]["height"].as_double_or_die();
+    double length = configuration[name]["length"].as_double_or_die();
+    double depth = configuration[name]["depth"].as_double_or_die();
+
+    Figure3D figure;
+    std::vector<Vector3D> points= {Vector3D::point(length/2,-height/2,-depth/2), Vector3D::point(-length/2,height/2,-depth/2), Vector3D::point(length/2,height/2,depth/2), Vector3D::point(-length/2,-height/2,depth/2),
+                                   Vector3D::point(length/2,height/2,-depth/2), Vector3D::point(-length/2,-height/2,-depth/2), Vector3D::point(length/2,-height/2,depth/2), Vector3D::point(-length/2,height/2,depth/2)};
+    figure.setPoints(points);
+    figure.setColor(color);
+    std::vector<Face> faces = {Face({0,4,2,6}),Face({4,1,7,2}), Face({1,5,3,7}), Face({5,0,6,3}), Face({6,2,7,3}), Face({0,5,1,4})};
+    figure.setFaces(faces);
     return figure;
 }
 //
