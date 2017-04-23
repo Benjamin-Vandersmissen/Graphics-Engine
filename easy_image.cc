@@ -372,6 +372,7 @@ std::ostream& img::operator<<(std::ostream& out, EasyImage const& image)
 	header.ncolors = 0; //no color palette
 	header.nimpcolors = 0;//no important colors
 
+
 	//okay that should be all the header stuff: let's write it to the stream
 	out.write((char*) &magic, sizeof(magic));
 	out.write((char*) &file_header, sizeof(file_header));

@@ -55,6 +55,8 @@ public:
 
     Vector3D getCenter(int face);
 
+    Vector3D getCenter();
+
     Vector3D operator[](unsigned int i) const;
 };
 
@@ -73,6 +75,6 @@ Lines2D doProjection(const Figures3D &figures, bool ZBuffering);
 Point2D doProjection(const Vector3D& point, const double d = 1);
 void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d, double dx,
                         double dy, const img::Color &color);
-
+bool operator==(const Face& face1, const Face& face2);
 
 #endif //GRAPHICS_ENGINE_FIGURE3D_HH

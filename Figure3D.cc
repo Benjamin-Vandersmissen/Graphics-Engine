@@ -164,6 +164,15 @@ Vector3D Figure3D::operator[](unsigned int i) const{
     }
 }
 
+Vector3D Figure3D::getCenter() {
+    Vector3D temp = Vector3D::point(0,0,0);
+    for( Vector3D& point : this->Points){
+        temp += point;
+    }
+    temp /= this->Points.size();
+    return temp;
+}
+
 
 std::ostream &operator<<(std::ostream &stream, const Figure3D& figure) {
     for(Face face : figure.getFaces()) {
@@ -261,3 +270,12 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
         }
     }
 }
+
+bool operator==(const Face &face1, const Face &face2) {
+    bool equal = face1.getPointIndices().size() == face2.getPointIndices().size();
+    for(int i = 0; i < face1.getPointIndices().size(); i++){
+        equal = equal && face1[i]==face2[i];
+    }
+    return equal;
+}
+
