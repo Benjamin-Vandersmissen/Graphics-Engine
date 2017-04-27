@@ -3,10 +3,22 @@
 //
 
 #include "Figure3D.hh"
+#include "Light.hh"
 
 //transformation functions
 Matrix scaleFigure(const double scale) {
     Matrix matrix;
+    /*
+     * /-----------------------------\
+     * | scale |   0   |   0   |  0  |
+     * |-----------------------------|
+     * |   0   | scale |   0   |  0  |
+     * |-----------------------------|
+     * |   0   |   0   | scale |  0  |
+     * |-----------------------------|
+     * |   0   |   0   |   0   |  1  |
+     * \=============================/
+     * */
     matrix(1,1) = scale;
     matrix(2,2) = scale;
     matrix(3,3) = scale;
@@ -15,6 +27,17 @@ Matrix scaleFigure(const double scale) {
 
 Matrix rotateFigureX(const double angle) {
     Matrix matrix;
+    /*
+     * /-----------------------------\
+     * |   1   |   0   |   0   |  0  |
+     * |-----------------------------|
+     * |   0   | cos a | sin a |  0  |
+     * |-----------------------------|
+     * |   0   | -sin a| cos a |  0  |
+     * |-----------------------------|
+     * |   0   |   0   |   0   |  1  |
+     * \=============================/
+     * */
     matrix(2,2) = std::cos(angle);
     matrix(2,3) = std::sin(angle);
     matrix(3,2) = -std::sin(angle);
@@ -24,6 +47,17 @@ Matrix rotateFigureX(const double angle) {
 
 Matrix rotateFigureY(const double angle) {
     Matrix matrix;
+    /*
+     * /-----------------------------\
+     * | cos a |   0   | -sin a|  0  |
+     * |-----------------------------|
+     * |   0   |   1   |   0   |  0  |
+     * |-----------------------------|
+     * | sin a |   0   | cos a |  0  |
+     * |-----------------------------|
+     * |   0   |   0   |   0   |  1  |
+     * \=============================/
+     * */
     matrix(1,1) = std::cos(angle);
     matrix(1,3) = -std::sin(angle);
     matrix(3,1) = std::sin(angle);
@@ -33,6 +67,17 @@ Matrix rotateFigureY(const double angle) {
 
 Matrix rotateFigureZ(const double angle) {
     Matrix matrix;
+    /*
+     * /-----------------------------\
+     * | cos a | sin a |   0   |  0  |
+     * |-----------------------------|
+     * | -sin a| cos a |   0   |  0  |
+     * |-----------------------------|
+     * |   0   |   0   |   1   |  0  |
+     * |-----------------------------|
+     * |   0   |   0   |   0   |  1  |
+     * \=============================/
+     * */
     matrix(1,1) = std::cos(angle);
     matrix(1,2) = std::sin(angle);
     matrix(2,1) = -std::sin(angle);
@@ -42,10 +87,43 @@ Matrix rotateFigureZ(const double angle) {
 
 Matrix translateFigure(const Vector3D &vector) {
     Matrix matrix;
+    /*
+     * /-----------------------------\
+     * |   1   |   0   |   0   |  0  |
+     * |-----------------------------|
+     * |   0   |   1   |   0   |  0  |
+     * |-----------------------------|
+     * |   0   |   0   |   1   |  0  |
+     * |-----------------------------|
+     * |   x   |   y   |   z   |  1  |
+     * \=============================/
+     * */
     matrix(4,1) = vector.x;
     matrix(4,2) = vector.y;
     matrix(4,3) = vector.z;
     return matrix;
+}
+
+Matrix getEyeMatrix(Vector3D &eye) {
+    double r = std::sqrt((pow(eye.x,2) + pow(eye.y,2) + pow(eye.z,2)));
+    double theta = std::atan2(eye.y,eye.x);
+    double phi = std::acos(eye.z/r);
+    toPolar(eye, r, theta, phi);
+
+    Matrix eyeMatrix;
+    eyeMatrix(1,1) = -sin(theta);
+    eyeMatrix(1,2) = -cos(theta) * cos(phi);
+    eyeMatrix(1,3) = cos(theta) * sin(phi);
+
+    eyeMatrix(2,1) = cos(theta);
+    eyeMatrix(2,2) = -sin(theta) * cos(phi);
+    eyeMatrix(2,3) = sin(theta)*sin(phi);
+
+    eyeMatrix(3,2) = sin(phi);
+    eyeMatrix(3,3) = cos(phi);
+
+    eyeMatrix(4,3) = -r;
+    return eyeMatrix;
 }
 
 void applyTransformation(Figures3D &figures, Matrix &matrix) {
@@ -156,7 +234,7 @@ Vector3D Figure3D::getCenter(int face) {
     return point;
 }
 
-Vector3D Figure3D::operator[](unsigned int i) const{
+const Vector3D & Figure3D::operator[] (unsigned int i) const{
     if (i >= this->Points.size()){
         throw(std::invalid_argument("index out of range"));
     }else{
@@ -171,6 +249,38 @@ Vector3D Figure3D::getCenter() {
     }
     temp /= this->Points.size();
     return temp;
+}
+
+const Color &Figure3D::getAmbientReflection() const {
+    return ambientReflection;
+}
+
+void Figure3D::setAmbientReflection(const Color &ambientReflection) {
+    Figure3D::ambientReflection = ambientReflection;
+}
+
+const Color &Figure3D::getDiffuseReflection() const {
+    return diffuseReflection;
+}
+
+void Figure3D::setDiffuseReflection(const Color &diffuseReflection) {
+    Figure3D::diffuseReflection = diffuseReflection;
+}
+
+const Color &Figure3D::getSpecularReflection() const {
+    return specularReflection;
+}
+
+void Figure3D::setSpecularReflection(const Color &specularReflection) {
+    Figure3D::specularReflection = specularReflection;
+}
+
+double Figure3D::getReflectionCoefficient() const {
+    return reflectionCoefficient;
+}
+
+void Figure3D::setReflectionCoefficient(double reflectionCoefficient) {
+    Figure3D::reflectionCoefficient = reflectionCoefficient;
 }
 
 
@@ -206,7 +316,8 @@ void triangulate(Figure3D &figure) {
 }
 
 void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d, double dx,
-                        double dy, const img::Color &color) {
+                        double dy, Lights3D &lights, const Color &ambientReflection, const Color &diffuseReflection,
+                        const Color &specularReflection, double reflectionCoefficient) {
 
     Point2D newA = doProjection(A, d);
     newA.x += dx;
@@ -228,10 +339,27 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
     Line2D BC = {newB,newC, img::Color()};
     Lines2D lines = {AB,AC,BC};
 
-    img::Color color1 = color;
 //    color1.blue = std::rand()%100 + 25;
 //    color1.red = std::rand()%100 + 25;
 //    color1.green = std::rand()%100 + 25;
+
+    Color baseColor;
+    for(Light& light: lights){
+        baseColor += light.ambientLight*ambientReflection;
+        if (light.infinity){
+            Vector3D U = A-B;
+            Vector3D V = A-C;
+            Vector3D W = Vector3D::cross(U,V);
+            Vector3D L = -light.direction;
+            L.normalise();
+            W.normalise();
+            double cosinus = (W.x*L.x + W.y*L.y + W.z*L.z);
+            if (cosinus >= 0) {
+                Color newColor = light.diffuseLight * diffuseReflection * cosinus;
+                baseColor += newColor;
+            }
+        }
+    }
 
     for(int y = Ymin; y <= Ymax; y++){
         double XL = std::numeric_limits<double>::infinity();
@@ -246,6 +374,7 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
 
             }
         }
+
         for(int x = round(XL+0.5); x <= round(XR-0.5); x++){
             double ZGinverse = 1/(3*A.z) + 1/(3*B.z) + 1/(3*C.z);
             double XG = (newA.x+newB.x+newC.x)/3;
@@ -260,13 +389,57 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
             double dzdy = W.y/(-d*k);
 
             double Zinverse = 1.001*ZGinverse + (x-XG)*dzdx + (y-YG)*dzdy;
+            Color localColor;
+            for(Light& light: lights){
+                Vector3D N = W;
+                W.normalise();
+                Point2D oldPoint = Point2D(x,y);
+                oldPoint.x -= dx;
+                oldPoint.y -= dy;
+                oldPoint.x /= d;
+                oldPoint.y /= d;
+                double z = 1/(Zinverse/1.001);
+                oldPoint.x *= -z;
+                oldPoint.y *= -z;
+                Vector3D point = Vector3D::point(oldPoint.x, oldPoint.y, z);
+                if (!light.infinity){
+                    Vector3D L = light.location - point;
+                    L.normalise();
+                    double cosinusA = (W.x*L.x + W.y*L.y + W.z*L.z);
+                    if (cosinusA >= 0) {
+                        localColor += light.diffuseLight * diffuseReflection * cosinusA;
+                        Vector3D R = 2*cosinusA*W - L;
+                        R.normalise();
+                        Vector3D vec = Vector3D::point(0,0,0) - point; //{0,0,0} is eyepoint in eyepoint transformation!
+                        vec.normalise();
+                        double cosinusB = (R.x*vec.x + R.y*vec.y + R.z*vec.z);
+                        if (cosinusB >= 0) {
+                            localColor += light.specularLight * specularReflection * std::pow(cosinusB, reflectionCoefficient);
+                        }
+                    }
+                }
+                else{
+                    Vector3D L = -light.direction;
+                    L.normalise();
+                    double cosinusA = (W.x*L.x + W.y*L.y + W.z*L.z);
+                    if (cosinusA >= 0){
+                        Vector3D R = 2*cosinusA*W - L;
+                        R.normalise();
+                        Vector3D vec = Vector3D::point(0,0,0) - point;
+                        vec.normalise();
+                        double cosinusB = (R.x*vec.x + R.y*vec.y + R.z*vec.z);
+                        if (cosinusB >= 0) {
+                            localColor += light.specularLight * specularReflection * std::pow(cosinusB, reflectionCoefficient);
+                        }
+                    }
+                }
+            }
+
             if (buf[y][x] >= Zinverse){
                 buf[y][x] = Zinverse;
-                image(x,y) = color1;
+                Color color = baseColor + localColor;
+                image(x,y) = color.toRGB();
             }
-//            else{
-//                std::cerr << "HUH?" << std::endl;
-//            }
         }
     }
 }
@@ -279,3 +452,34 @@ bool operator==(const Face &face1, const Face &face2) {
     return equal;
 }
 
+void operator+=(Color &col1, const Color &col2) {
+    col1.R += col2.R;
+    col1.G += col2.G;
+    col1.B += col2.B;
+}
+
+Color operator*(const Color &col1, const double d) {
+    return Color(col1.R*d, col1.G*d, col1.B*d);
+}
+
+Color operator*(const Color &col1, const Color &col2) {
+    return Color(col1.R*col2.R, col1.G*col2.G, col1.B*col2.B);
+}
+
+Color operator+(const Color &col1, const Color &col2) {
+    return Color(col1.R+col2.R, col1.G+col2.G, col1.B+col2.B);
+}
+
+Color::Color(double R, double G, double B) : R(R), G(G), B(B) {}
+
+img::Color Color::toRGB() {
+    return img::Color(extractColor({R,G,B}));
+}
+
+Color::Color(std::vector<double> vec) {
+    R = vec[0];
+    G = vec[1];
+    B = vec[2];
+}
+
+Color::Color() : R(0), G(0), B(0){}

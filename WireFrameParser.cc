@@ -8,10 +8,40 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
     int size = configuration["General"]["size"].as_int_or_die();
     img::Color bgcolor = img::Color(extractColor(configuration["General"]["backgroundcolor"].as_double_tuple_or_die()));
     int nrFigures = configuration["General"]["nrFigures"].as_int_or_die();
+    int nrLights = configuration["General"]["nrLights"].as_int_or_default(0);
     std::vector<double> EyeCoords = configuration["General"]["eye"].as_double_tuple_or_die();
     Vector3D eye;
     eye = Vector3D::point(EyeCoords[0], EyeCoords[1], EyeCoords[2]);
     Figures3D figures;
+    Lights3D lights;
+    if (nrLights == 0){
+        Light defaultAmbient;
+        defaultAmbient.ambientLight = Color(1,1,1);
+        lights.push_back(defaultAmbient);
+    }
+    for(int i = 0; i < nrLights; i++){
+        Light newLight;
+        std::string name = "Light" + std::to_string(i);
+        newLight.ambientLight = configuration[name]["ambientLight"].as_double_tuple_or_default({0,0,0});
+        newLight.infinity = configuration[name]["infinity"].as_bool_or_default(true);
+        newLight.diffuseLight = configuration[name]["diffuseLight"].as_double_tuple_or_default({0,0,0});
+        newLight.specularLight = configuration[name]["specularLight"].as_double_tuple_or_default({0,0,0});
+        std::vector<double> vec;
+        if(configuration[name]["direction"].as_double_tuple_if_exists(vec)){
+            newLight.direction = Vector3D::vector(vec[0],vec[1],vec[2]);
+        }else{
+            newLight.direction = Vector3D::vector(0,0,0);
+        }
+
+        if (configuration[name]["location"].as_double_tuple_if_exists(vec)){
+            newLight.location = Vector3D::point(vec[0],vec[1],vec[2]);
+        }
+        else{
+            newLight.location = Vector3D::point(0,0,0);
+        }
+        lights.push_back(newLight);
+    }
+
     for(int i = 0; i < nrFigures; i++){
         std::string name = "Figure" + std::to_string(i);
         std::string type = configuration[name.c_str()]["type"].as_string_or_die();
@@ -22,8 +52,10 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         std::vector<double> CenterCoords = configuration[name.c_str()]["center"].as_double_tuple_or_die();
         Vector3D CenterPoint;
         CenterPoint = Vector3D::point(CenterCoords[0], CenterCoords[1], CenterCoords[2]);
-        img::Color color = img::Color(extractColor(configuration[name.c_str()]["color"].as_double_tuple_or_die()));
-
+        Color ambientReflection = configuration[name.c_str()]["ambientReflection"].as_double_tuple_or_default(configuration[name.c_str()]["color"].as_double_tuple_or_default({0,0,0}));
+        Color diffuseReflection = configuration[name.c_str()]["diffuseReflection"].as_double_tuple_or_default({0,0,0});
+        Color specularReflection = configuration[name.c_str()]["specularReflection"].as_double_tuple_or_default({0,0,0});
+        double reflectionCoefficient = configuration[name.c_str()]["reflectionCoefficient"].as_double_or_default(0);
         bool rainbow = configuration[name.c_str()]["rainbow"].as_bool_or_default(false);
 
         Matrix m;
@@ -31,43 +63,43 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         Vector3D vec;
         std::vector<Figure3D> tempfigures = {};
         if (type == "LineDrawing"){
-            tempfigures.push_back(this->parseLinedrawing(configuration, name, color));
+            tempfigures.push_back(this->parseLinedrawing(configuration, name));
         }
         else if(type == "Cube"){
-            tempfigures.push_back(this->parseCube(color));
+            tempfigures.push_back(this->parseCube());
         }
         else if (type == "Cuboid"){
-            tempfigures.push_back(this->parseCuboid(configuration, name, color));
+            tempfigures.push_back(this->parseCuboid(configuration, name));
         }
         else if(type == "Tetrahedron"){
-            tempfigures.push_back(this->parseTetrahedron(color));
+            tempfigures.push_back(this->parseTetrahedron());
         }
         else if (type == "Octahedron"){
-            tempfigures.push_back(this->parseOctahedron(color));
+            tempfigures.push_back(this->parseOctahedron());
         }
         else if (type == "Icosahedron"){
-            tempfigures.push_back(this->parseIcosahedron(color));
+            tempfigures.push_back(this->parseIcosahedron());
         }
         else if (type == "Dodecahedron"){
-            tempfigures.push_back(this->parseDodecahedron(color));
+            tempfigures.push_back(this->parseDodecahedron());
         }
         else if (type == "Cone"){
-            tempfigures.push_back(this->parseCone(configuration, name, color));
+            tempfigures.push_back(this->parseCone(configuration, name));
         }
         else if (type == "Cylinder"){
-            tempfigures.push_back(this->parseCylinder(configuration, name, color));
+            tempfigures.push_back(this->parseCylinder(configuration, name));
         }
         else if (type == "Sphere"){
-            tempfigures.push_back(this->parseSphere(configuration, name, color));
+            tempfigures.push_back(this->parseSphere(configuration, name));
         }
         else if (type == "Torus"){
-            tempfigures.push_back(this->parseTorus(configuration, name, color));
+            tempfigures.push_back(this->parseTorus(configuration, name));
         }
 //        else if (type == "Mobius"){
 //            figures.push_back(this->parseMobius(configuration, name, color));
 //        }
         else if (type == "3DLSystem"){
-            tempfigures.push_back(this->parse3DLsystem(configuration, name, color));
+            tempfigures.push_back(this->parse3DLsystem(configuration, name));
         }
 //        else if (type == "NavelTorus"){
 //            figures.push_back(this->parseNavelTorus(configuration, name, color));
@@ -83,15 +115,19 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         else if (type == "Directions"){
             tempfigures = this->parseDirections();
         }
+
         else if (type.find("Fractal") != std::string::npos){
-            tempfigures = this->parseFractal(configuration, name, color);
+            tempfigures = this->parseFractal(configuration, name);
         }
+
         else if (type == "BuckyBall"){
-            tempfigures.push_back(this->parseBuckyBall(color));
+            tempfigures.push_back(this->parseBuckyBall());
         }
+
         else if (type == "MengerSponge"){
-            tempfigures.push_back(this->parseMengerSponge(configuration, name, color));
+            tempfigures.push_back(this->parseMengerSponge(configuration, name));
         }
+        img::Color col = {0,0,0};
         for(Figure3D& figure: tempfigures) {
 
             figure.rainbow = rainbow;
@@ -112,30 +148,22 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                                    +CenterPoint.z); //translate the whole Figure if the centerpoint isn't (0,0,0);
             m = translateFigure(vec);
             figure.applyTransformation(m);
+            figure.setAmbientReflection(ambientReflection);
+            figure.setDiffuseReflection(diffuseReflection);
+            figure.setSpecularReflection(specularReflection);
+            figure.setReflectionCoefficient(reflectionCoefficient);
         }
         figures.insert(figures.end(), tempfigures.begin(), tempfigures.end());
     }
-    double r = std::sqrt((pow(eye.x,2) + pow(eye.y,2) + pow(eye.z,2)));
-    double theta = std::atan2(eye.y,eye.x);
-    double phi = std::acos(eye.z/r);
-    toPolar(eye, r, theta, phi);
 
-    Matrix eyeMatrix;
-    eyeMatrix(1,1) = -sin(theta);
-    eyeMatrix(1,2) = -cos(theta) * cos(phi);
-    eyeMatrix(1,3) = cos(theta) * sin(phi);
-
-    eyeMatrix(2,1) = cos(theta);
-    eyeMatrix(2,2) = -sin(theta) * cos(phi);
-    eyeMatrix(2,3) = sin(theta)*sin(phi);
-
-    eyeMatrix(3,2) = sin(phi);
-    eyeMatrix(3,3) = cos(phi);
-
-    eyeMatrix(4,3) = -r;
+    Matrix eyeMatrix = getEyeMatrix(eye);
 
     applyTransformation(figures, eyeMatrix);
     Lines2D lines = doProjection(figures, ZBuffering != 0);
+    for(Light& light: lights){
+        light.direction *= eyeMatrix;
+        light.location *= eyeMatrix;
+    }
     img::EasyImage image;
     if (ZBuffering < 2)
         image = draw2DLines(lines, size, bgcolor, ZBuffering==1);
@@ -158,28 +186,22 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         double dy = (Imagey/2) - DCy;
         for (Figure3D& figure: figures){
             triangulate(figure);
-//            std::cerr << figure.getFaces().size();
             int i = 0;
-            img::Color color = img::Color(rand()%255, rand()%255, rand()%255);
             for(const Face& face : figure.getFaces()){
                 Vector3D pointA = figure[face[0]];
                 Vector3D pointB = figure[face[1]];
                 Vector3D pointC = figure[face[2]];
-//                int i = rand()%255;
-//                color = img::Color(i,i,i);
-                draw_zbuf_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy, color);
-                i = (i+1)%2;
-                if (i == 0){
-                    color = img::Color(rand()%255,rand()%255,rand()%255);
-                }
+                draw_zbuf_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy,
+                                   lights, figure.getAmbientReflection(), figure.getDiffuseReflection(),
+                                   figure.getSpecularReflection(), figure.getReflectionCoefficient());
+                i++;
             }
         }
     }
     this->image = image;
 }
 
-Figure3D WireFrameParser::parseLinedrawing(const ini::Configuration &configuration, std::string &name,
-                                           img::Color &color) {
+Figure3D WireFrameParser::parseLinedrawing(const ini::Configuration &configuration, std::string &name) {
     int nrPoints = configuration[name.c_str()]["nrPoints"].as_int_or_die();
     int nrLines = configuration[name.c_str()]["nrLines"].as_int_or_die();
     std::string str;
@@ -203,7 +225,9 @@ Figure3D WireFrameParser::parseLinedrawing(const ini::Configuration &configurati
         }
         Faces.push_back(Face(indices));
     }
-    Figure3D figure(Faces, Points, color);
+    Figure3D figure;
+    figure.setFaces(Faces);
+    figure.setPoints(Points);
     return figure;
 }
 
@@ -211,51 +235,70 @@ const img::EasyImage &WireFrameParser::getImage() const {
     return image;
 }
 
-Figure3D WireFrameParser::parseCube(img::Color &color) {
+Figure3D WireFrameParser::parseCube() {
+    img::Color color = {0,0,0};
     return this->drawCube(color);
 }
 
-Figure3D WireFrameParser::parseTetrahedron(img::Color &color) {
+Figure3D WireFrameParser::parseTetrahedron() {
+    img::Color color = {0,0,0};
+
     return this->drawTetrahedron(color);
 }
 
-Figure3D WireFrameParser::parseOctahedron(img::Color &color) {
+Figure3D WireFrameParser::parseOctahedron() {
+    img::Color color = {0,0,0};
+
     return this->drawOctahedron(color);
 }
 
-Figure3D WireFrameParser::parseIcosahedron(img::Color &color) {
+Figure3D WireFrameParser::parseIcosahedron() {
+    img::Color color = {0,0,0};
+
     return this->drawIcosahedron(color);
 }
 
-Figure3D WireFrameParser::parseDodecahedron(img::Color &color) {
+Figure3D WireFrameParser::parseDodecahedron() {
+    img::Color color = {0,0,0};
+
     return this->drawDodecahedron(color);
 }
 
-Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std::string &name) {
+    img::Color color = {0,0,0};
+
     double height = configuration[name]["height"].as_double_or_die();
     int n = configuration[name]["n"].as_int_or_die();
     return this->drawCone(height, n, color);
 }
 
-Figure3D WireFrameParser::parseCuboid(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+Figure3D WireFrameParser::parseCuboid(const ini::Configuration &configuration, std::string &name) {
+    img::Color color = {0,0,0};
+
     double height = configuration[name]["height"].as_double_or_die();
     double length = configuration[name]["length"].as_double_or_die();
     double depth = configuration[name]["depth"].as_double_or_die();
     return this->drawCuboid(height, length, depth, color);
 }
 
-Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration, std::string &name) {
+    img::Color color = {0,0,0};
+
     double height = configuration[name]["height"].as_double_or_die();
     int n = 2*configuration[name]["n"].as_int_or_die();
     return this->drawCylinder(height, n, color);
 }
 
-Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, std::string &name) {
+    img::Color color = {0,0,0};
+
     int n = configuration[name]["n"].as_int_or_die();
     return this->drawSphere(n, color);
 }
 
-Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, std::string &name) {
+    img::Color color = {0,0,0};
+
     double r = configuration[name]["r"].as_double_or_die();
     double R = configuration[name]["R"].as_double_or_die();
     int m = configuration[name]["m"].as_int_or_die();
@@ -264,7 +307,9 @@ Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, st
 }
 
 Figure3D
-WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::string &name) {
+    img::Color color = {0,0,0};
+
     std::string filename = configuration[name]["inputfile"].as_string_or_die();
     LParser::LSystem3D Lsystem = getLSystem3D(filename);
     Figure3D figure = drawLSystem3D(Lsystem, color);
@@ -309,7 +354,7 @@ Figure3D WireFrameParser::drawOctahedron(img::Color &color, Vector3D center, Vec
                                     Vector3D::point(0,0,-1), Vector3D::point(0,0,1)};
     figure.setPoints(points);
     std::vector<Face> faces = {Face({0,1,5}), Face({1,2,5}), Face({2,3,5}), Face({3,0,5}),
-                               Face({2,1,5}), Face({2,1,4}), Face({3,2,4}), Face({0,3,4})};
+                               Face({1,0,4}), Face({2,1,4}), Face({3,2,4}), Face({0,3,4})};
     figure.setFaces(faces);
     figure.setColor(color);
     Matrix matrix;
@@ -350,7 +395,7 @@ Figure3D WireFrameParser::drawIcosahedron(img::Color &color, Vector3D center, Ve
 }
 
 Figure3D WireFrameParser::drawDodecahedron(img::Color &color, Vector3D center, Vector3D rotation, double scale) {
-    Figure3D figure = parseIcosahedron(color);
+    Figure3D figure = parseIcosahedron();
     Figure3D figure2;
     std::vector<Vector3D> points = {};
     for(int i = 0; i < figure.getFaces().size();i++){
@@ -424,8 +469,8 @@ Figure3D WireFrameParser::drawCylinder(double height, int n, img::Color &color, 
     for(int i = 0; i < n; i ++){
         if (i < n/2) {
             points.push_back(Vector3D::point(cos(4 * i * M_PI / n), sin(4 * i * M_PI / n), 0));
-            faces.push_back(Face({i, i + n/2, (i+1)%(n/2) + n/2 , (i+1)%(n/2)}));
-            circleIndices.insert(circleIndices.begin(), i);
+            faces.push_back(Face({ (i+1)%(n/2), (i+1)%(n/2) + n/2 , i + n/2, i}));
+            circleIndices.push_back(i);
         }
         if (i == n/2){
             faces.push_back(Face(circleIndices));
@@ -433,7 +478,7 @@ Figure3D WireFrameParser::drawCylinder(double height, int n, img::Color &color, 
         };
         if(i >= n/2){
             points.push_back(Vector3D::point(cos(4 * i * M_PI / n), sin(4 * i * M_PI / n), height));
-            circleIndices.insert(circleIndices.begin(), i);
+            circleIndices.push_back(i);
         }
 
     }
@@ -450,7 +495,7 @@ Figure3D WireFrameParser::drawCylinder(double height, int n, img::Color &color, 
 }
 
 Figure3D WireFrameParser::drawSphere(int n, img::Color &color, Vector3D center, Vector3D rotation, double scale) {
-    Figure3D figure = parseIcosahedron(color);
+    Figure3D figure = parseIcosahedron();
     for (int j = 0; j < n; j++) { //repeat the process n times
         std::vector<Vector3D> test = {};
         std::vector<Face> facesTest = {};
@@ -499,8 +544,8 @@ Figure3D WireFrameParser::drawSphere(int n, img::Color &color, Vector3D center, 
                 index6 = std::distance(test.begin(), std::find(test.begin(), test.end(), punt6));
             }
             facesTest.push_back(Face({index1, index4, index6}));
-            facesTest.push_back(Face({index2, index4, index5}));
-            facesTest.push_back(Face({index3, index5, index6}));
+            facesTest.push_back(Face({index4, index2, index5}));
+            facesTest.push_back(Face({index5, index3, index6}));
             facesTest.push_back(Face({index4, index5, index6}));
         }
         figure.setPoints(test);
@@ -549,88 +594,108 @@ Figure3D WireFrameParser::drawBuckyBall(img::Color &color, Vector3D center, Vect
     Figure3D figure = drawIcosahedron(color);
     std::vector<Vector3D> points = {};
     std::vector<Face> faces = {};
-    for(Face face : figure.getFaces()){
-        Vector3D point;
-        std::vector<int> newface = {}; //zeshoek
-        for (int i = 0 ; i < 3; i++) {
-            std::vector<int> newface2 = {}; //driehoek
-            point = figure[face[i]];
-            auto it = std::find(points.begin(), points.end(), point);
-            if ( it == points.end()) {
-                points.push_back(point);
-                newface2.push_back(points.size()-1);
-            }
-            else{
-                newface2.push_back(std::distance(points.begin(), it));
-            }
-            point = figure[face[i]] + (1.0/3.0)*(figure[face[(i+1)%3]]-figure[face[i]]);
-            it = std::find(points.begin(), points.end(), point);
-            if (it == points.end()) {
-                points.push_back(point);
-                newface.push_back(points.size()-1);
-                newface2.push_back(points.size()-1);
-            }
-            else{
-                newface.push_back(std::distance(points.begin(), it));
-                newface2.push_back(std::distance(points.begin(), it));
-            }
-            point = figure[face[i]] + (2.0/3.0)*(figure[face[(i+1)%3]]-figure[face[i]]);
-            it = std::find(points.begin(), points.end(), point);
-            if (it == points.end()) {
-                points.push_back(point);
-                newface.push_back(points.size()-1);
-                newface2.push_back(points.size()-1);
-            }
-            else{
-                newface.push_back(std::distance(points.begin(), it));
-                newface2.push_back(std::distance(points.begin(), it));
-            }
-            faces.push_back(Face(newface2));
+    std::vector<Face> triangles = {};
+    std::vector<Vector3D> trianglePoints = {};
+    for(const Face& face: figure.getFaces()){
+        Vector3D Point1 = figure[face[0]]+(1.0/3.0)*(figure[face[1]] - figure[face[0]]);
+        Vector3D Point2 = figure[face[0]]+(2.0/3.0)*(figure[face[1]] - figure[face[0]]);
+        Vector3D Point3 = figure[face[1]]+(1.0/3.0)*(figure[face[2]] - figure[face[1]]);
+        Vector3D Point4 = figure[face[1]]+(2.0/3.0)*(figure[face[2]] - figure[face[1]]);
+        Vector3D Point5 = figure[face[2]]+(1.0/3.0)*(figure[face[0]] - figure[face[2]]);
+        Vector3D Point6 = figure[face[2]]+(2.0/3.0)*(figure[face[0]] - figure[face[2]]);
+
+        auto it = std::find(points.begin(), points.end(), Point1);
+        int index1, index2, index3, index4, index5, index6, indexA, indexB, indexC;
+        if (it == points.end()){
+            index1 = points.size();
+            points.push_back(Point1);
+        }else{
+            index1 = std::distance(points.begin(), it);
         }
-        faces.push_back(Face(newface));
-    }
-    std::vector<Face> alGebruikteFaces = {};
-    for(Face& face: faces){
-        if (face.getPointIndices().size() == 3){ //driehoekje
-            if (std::find(alGebruikteFaces.begin(), alGebruikteFaces.end(), face) != alGebruikteFaces.end())
-                continue;
-            std::vector<Face> temp = {}; //vector voor de 5 faces die samen  een vijfhoek worden
-            for(Face& face1 : faces){
-                if (face1[0] == face[0]){ //ze hebben hetzelfde grote hoekpunt
-                    temp.push_back(face);
-                    alGebruikteFaces.push_back(face1);
-                }
-            }
-            std::vector<int> newFace = {};
-            for(Face& face1 : temp){
-                int i = face1[1]; //pak van elke face het 2de punt, die verschillen allemaal van elkaar
-                newFace.push_back(i);
-            }
-            faces.push_back(Face(newFace)); //ge hebt een vijfhoek
+        it = std::find(points.begin(), points.end(), Point2);
+        if (it == points.end()){
+            index2 = points.size();
+            points.push_back(Point2);
         }
+        else{
+            index2 = std::distance(points.begin(), it);
+        }
+        it = std::find(points.begin(), points.end(), Point3);
+        if (it == points.end()){
+            index3 = points.size();
+            points.push_back(Point3);
+        }else{
+            index3 = std::distance(points.begin(), it);
+        }
+        it = std::find(points.begin(), points.end(), Point4);
+        if (it == points.end()){
+            index4 = points.size();
+            points.push_back(Point4);
+        }else{
+            index4 = std::distance(points.begin(), it);
+        }
+        it = std::find(points.begin(), points.end(), Point5);
+        if (it == points.end()){
+            index5 = points.size();
+            points.push_back(Point5);
+        }
+        else{
+            index5 = std::distance(points.begin(), it);
+        }
+        it = std::find(points.begin(), points.end(), Point6);
+        if (it == points.end()){
+            index6 = points.size();
+            points.push_back(Point6);
+        }else{
+            index6 = std::distance(points.begin(), it);
+        }
+        it = std::find(trianglePoints.begin(), trianglePoints.end(), figure[face[0]]);
+        if (it == trianglePoints.end()){
+            indexA = trianglePoints.size();
+            trianglePoints.push_back(figure[face[0]]);
+        }else{
+            indexA = std::distance(trianglePoints.begin(), it);
+        }
+        it = std::find(trianglePoints.begin(), trianglePoints.end(), figure[face[1]]);
+        if (it == trianglePoints.end()){
+            indexB = trianglePoints.size();
+            trianglePoints.push_back(figure[face[1]]);
+        }
+        else{
+            indexB = std::distance(trianglePoints.begin(), it);
+        }
+        it = std::find(trianglePoints.begin(), trianglePoints.end(), figure[face[2]]);
+        if (it == trianglePoints.end()){
+            indexC = trianglePoints.size();
+            trianglePoints.push_back(figure[face[2]]);
+        }
+        else{
+            indexC = std::distance(trianglePoints.begin(), it);
+        }
+        faces.push_back(Face({index1, index2, index3, index4, index5, index6})); //Zeshoek
+        triangles.push_back(Face({indexA, index1, index6})); //Driehoek A
+        triangles.push_back(Face({indexB, index3, index2})); //Driehoek B
+        triangles.push_back(Face({indexC, index5, index4})); //Driehoek C
     }
-    std::cerr << faces.size() << std::endl;
-    std::vector<Face> temp = {};
-    std::vector<Vector3D> tempPoints = {};
-    //verwijder de punten die niet gebruikt worden en verwijder de driehoeken
-    for(Face& face: faces){
-        std::vector<int> tempFace = {};
-        if (face.getPointIndices().size() == 3)//driehoeken worden niet mee opgeslagen
-            continue;
-        for(const int i : face.getPointIndices()){
-            auto it = std::find(tempPoints.begin(), tempPoints.end(), points[i]); //kijk of het punt van de face al opgeslagen is
-            if (it == tempPoints.end()){ //als het punt nog niet opgeslagen is, voeg het dan toe, en geef de positie mee aan de nieuwe face
-                tempFace.push_back(tempPoints.size());
-                tempPoints.push_back(points[i]);
-            }
-            else{
-                tempFace.push_back(std::distance(tempPoints.begin(),it)); //bepaal de locatie van het nieuwe punt
+    std::vector<Face> alGebruikteTriangles = {};
+    for(Face& triangle : triangles){
+        std::vector<Face> vijfhoekTriangles = {};
+        for(Face& triangle2 : triangles){
+            if (areAlmostEqual(trianglePoints[triangle[0]], trianglePoints[triangle2[0]])){
+                vijfhoekTriangles.push_back(triangle2);
+                alGebruikteTriangles.push_back(triangle2);
             }
         }
-        temp.push_back(Face(tempFace)); //voeg de face toe
+            rearrangeTriangles(vijfhoekTriangles, points);
+        std::vector<int> indices = {};
+        for(Face& tempTriangle: vijfhoekTriangles){
+            int index = tempTriangle[1];
+            indices.push_back(index);
+        }
+        faces.push_back(Face(indices));
     }
-    figure.setFaces(temp);
-    figure.setPoints(tempPoints);
+    figure.setFaces(faces);
+    figure.setPoints(points);
     return figure;
 }
 
@@ -684,11 +749,13 @@ std::vector<Figure3D> WireFrameParser::parseDirections() {
     return figures;
 }
 
-Figures3D WireFrameParser::parseFractal(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+Figures3D WireFrameParser::parseFractal(const ini::Configuration &configuration, std::string &name) {
     std::vector<std::string> supportedtypes = {"Cube", "Dodecahedron", "Icosahedron", "Octahedron", "Tetrahedron", "BuckyBall"};
     std::string type = configuration[name]["type"].as_string_or_die();
     type = type.substr(type.find("Fractal") + 7, type.length());
     Figure3D figure;
+    img::Color color = {0,0,0};
+
     switch(std::distance(supportedtypes.begin(),std::find(supportedtypes.begin(), supportedtypes.end(), type))){
         case 0 :
             figure = this->drawCube(color);
@@ -737,7 +804,8 @@ Figures3D WireFrameParser::generateFractal(Figure3D &figure, const int iteration
     return figures;
 }
 
-Figure3D WireFrameParser::parseBuckyBall(img::Color &color) {
+Figure3D WireFrameParser::parseBuckyBall() {
+    img::Color color = {0,0,0};
     return this->drawBuckyBall(color);
 }
 
@@ -781,8 +849,10 @@ Figure3D WireFrameParser::drawMengerSponge(img::Color &color, const int iteratio
 }
 
 Figure3D
-WireFrameParser::parseMengerSponge(const ini::Configuration &configuration, std::string &name, img::Color &color) {
+WireFrameParser::parseMengerSponge(const ini::Configuration &configuration, std::string &name) {
     int iterations = configuration[name]["nrIterations"].as_int_or_die();
+    img::Color color = {0,0,0};
+
     return this->drawMengerSponge(color, iterations);
 }
 
@@ -805,6 +875,27 @@ Figure3D WireFrameParser::mergeFigures(Figures3D &figures) {
     }
     // alleen figuren met dezelfde kleur mogen gemerged worden..
     return Figure3D(faces, points, figures.front().getColor());
+}
+
+void WireFrameParser::rearrangeTriangles(std::vector<Face> &triangles, std::vector<Vector3D> points) {
+    std::vector<Face> newTriangles = {triangles[0]};
+    Face Triangle = triangles[0];
+    for(int i = 1; i < triangles.size(); i++){
+        int j = 0;
+        for(Face& temp : triangles){
+            j++;
+            if(areAlmostEqual(points[temp[1]], points[Triangle[2]]) && std::find(newTriangles.begin(), newTriangles.end(), temp) == newTriangles.end()){
+                Triangle = temp;
+                newTriangles.push_back(temp);
+            }
+        }
+    }
+    triangles = newTriangles;
+}
+
+bool WireFrameParser::areAlmostEqual(Vector3D &vector1, Vector3D &vector2) {
+    double sigma = 0.0001;
+    return (std::abs(vector1.x-vector2.x) < sigma && std::abs(vector1.y-vector2.y) < sigma && std::abs(vector1.z-vector2.z) < sigma);
 }
 
 

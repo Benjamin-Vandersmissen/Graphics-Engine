@@ -10,6 +10,7 @@
 #include "Figure3D.hh"
 #include "UsefulFunctions.hh"
 #include "LSystems.hh"
+#include "Light.hh"
 #include <algorithm>
 
 class WireFrameParser {
@@ -18,6 +19,8 @@ private:
     img::EasyImage image;
     unsigned int ZBuffering;
 protected:
+    void rearrangeTriangles(std::vector<Face> &triangles, std::vector<Vector3D> points);
+    bool areAlmostEqual(Vector3D& vector1, Vector3D& vector2);
     Figure3D drawCube(img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
     Figure3D drawTetrahedron(img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
     Figure3D drawOctahedron(img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
@@ -36,21 +39,21 @@ protected:
 public:
     const img::EasyImage &getImage() const;
     WireFrameParser(const ini::Configuration &configuration, unsigned int ZBuffering = 0);
-    Figure3D parseLinedrawing(const ini::Configuration &configuration, std::string &name, img::Color &color);
-    Figure3D parseCube(img::Color &color);
-    Figure3D parseTetrahedron(img::Color& color);
-    Figure3D parseOctahedron(img::Color& color);
-    Figure3D parseIcosahedron(img::Color& color);
-    Figure3D parseDodecahedron(img::Color& color);
-    Figure3D parseCone(const ini::Configuration &configuration, std::string &name, img::Color& color);
-    Figure3D parseCuboid(const ini::Configuration &configuration, std::string &name, img::Color& color);
-    Figure3D parseCylinder(const ini::Configuration &configuration, std::string &name, img::Color& color);
-    Figure3D parseSphere(const ini::Configuration &configuration, std::string &name, img::Color& color);
-    Figure3D parseTorus(const ini::Configuration &configuration, std::string &name, img::Color& color);
-    Figure3D parse3DLsystem(const ini::Configuration &configuration, std::string & name, img::Color& color);
-    Figures3D parseFractal(const ini::Configuration& configuration, std::string& name, img::Color& color);
-    Figure3D parseBuckyBall(img::Color& color);
-    Figure3D parseMengerSponge(const ini::Configuration &configuration, std::string &name, img::Color &color);
+    Figure3D parseLinedrawing(const ini::Configuration &configuration, std::string &name);
+    Figure3D parseCube();
+    Figure3D parseTetrahedron();
+    Figure3D parseOctahedron();
+    Figure3D parseIcosahedron();
+    Figure3D parseDodecahedron();
+    Figure3D parseCone(const ini::Configuration &configuration, std::string &name);
+    Figure3D parseCuboid(const ini::Configuration &configuration, std::string &name);
+    Figure3D parseCylinder(const ini::Configuration &configuration, std::string &name);
+    Figure3D parseSphere(const ini::Configuration &configuration, std::string &name);
+    Figure3D parseTorus(const ini::Configuration &configuration, std::string &name);
+    Figure3D parse3DLsystem(const ini::Configuration &configuration, std::string &name);
+    Figures3D parseFractal(const ini::Configuration &configuration, std::string &name);
+    Figure3D parseBuckyBall();
+    Figure3D parseMengerSponge(const ini::Configuration &configuration, std::string &name);
 
     /**
      * @brief draws a railroad track from input
@@ -65,5 +68,29 @@ public:
 
 };
 
+/**
+ * \brief Draw a single ZBuffered triangle.
+ *
+ * \param buf The ZBuffer
+ *
+ * \param image The image to draw on.
+ *
+ * \param A The first point of the triangle.
+ *
+ * \param B The second point of the triangle.
+ *
+ * \param C The third point of the triangle.
+ *
+ * \param d The distance from the eye to the triangle.
+ *
+ * \param dx The amount by which the projected triangle needs to be moved in the x-plane.
+ *
+ * \param dy The amount by which the projected triangle needs to be moved in the y-plane.
+ *
+ * \param color The color
+ * **/
+void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d, double dx,
+                        double dy, Lights3D &lights, const Color &ambientReflection, const Color &diffuseReflection,
+                        const Color &specularReflection, double reflectionCoefficient);
 
 #endif //GRAPHICS_ENGINE_WIREFRAMEPARSER_H

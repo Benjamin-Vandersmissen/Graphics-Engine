@@ -9,6 +9,9 @@ int roundToInt(double d){
 std::vector<int> extractColor(std::vector<double> c){
     std::vector<int> color = {(int)(c[0]*255), (int)(c[1]*255), (int)(c[2]*255)};
 //    std::cout << color[0] << ", " << color[1] << ", " << color[2] << std::endl;
+    color[0] = std::min(255,color[0]);
+    color[1] = std::min(255,color[1]);
+    color[2] = std::min(255,color[2]);
     return color;
 }
 
