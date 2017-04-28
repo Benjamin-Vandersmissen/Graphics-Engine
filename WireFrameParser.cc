@@ -66,40 +66,40 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
             tempfigures.push_back(this->parseLinedrawing(configuration, name));
         }
         else if(type == "Cube"){
-            tempfigures.push_back(this->parseCube());
+            tempfigures.push_back(this->parseCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "Cuboid"){
-            tempfigures.push_back(this->parseCuboid(configuration, name));
+            tempfigures.push_back(this->parseCuboid(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if(type == "Tetrahedron"){
-            tempfigures.push_back(this->parseTetrahedron());
+            tempfigures.push_back(this->parseTetrahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "Octahedron"){
-            tempfigures.push_back(this->parseOctahedron());
+            tempfigures.push_back(this->parseOctahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "Icosahedron"){
-            tempfigures.push_back(this->parseIcosahedron());
+            tempfigures.push_back(this->parseIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "Dodecahedron"){
-            tempfigures.push_back(this->parseDodecahedron());
+            tempfigures.push_back(this->parseDodecahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "Cone"){
-            tempfigures.push_back(this->parseCone(configuration, name));
+            tempfigures.push_back(this->parseCone(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "Cylinder"){
-            tempfigures.push_back(this->parseCylinder(configuration, name));
+            tempfigures.push_back(this->parseCylinder(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "Sphere"){
-            tempfigures.push_back(this->parseSphere(configuration, name));
+            tempfigures.push_back(this->parseSphere(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "Torus"){
-            tempfigures.push_back(this->parseTorus(configuration, name));
+            tempfigures.push_back(this->parseTorus(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
 //        else if (type == "Mobius"){
 //            figures.push_back(this->parseMobius(configuration, name, color));
 //        }
         else if (type == "3DLSystem"){
-            tempfigures.push_back(this->parse3DLsystem(configuration, name));
+            tempfigures.push_back(this->parse3DLsystem(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
 //        else if (type == "NavelTorus"){
 //            figures.push_back(this->parseNavelTorus(configuration, name, color));
@@ -117,15 +117,15 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         }
 
         else if (type.find("Fractal") != std::string::npos){
-            tempfigures = this->parseFractal(configuration, name);
+            tempfigures = this->parseFractal(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
         }
 
         else if (type == "BuckyBall"){
-            tempfigures.push_back(this->parseBuckyBall());
+            tempfigures.push_back(this->parseBuckyBall(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
 
         else if (type == "MengerSponge"){
-            tempfigures.push_back(this->parseMengerSponge(configuration, name));
+            tempfigures.push_back(this->parseMengerSponge(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         img::Color col = {0,0,0};
         for(Figure3D& figure: tempfigures) {
@@ -235,36 +235,43 @@ const img::EasyImage &WireFrameParser::getImage() const {
     return image;
 }
 
-Figure3D WireFrameParser::parseCube() {
+Figure3D WireFrameParser::parseCube(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                    unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
-    return this->drawCube(color);
+    return this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient, Vector3D(), Vector3D(), 0);
 }
 
-Figure3D WireFrameParser::parseTetrahedron() {
+Figure3D WireFrameParser::parseTetrahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                           unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     return this->drawTetrahedron(color);
 }
 
-Figure3D WireFrameParser::parseOctahedron() {
+Figure3D WireFrameParser::parseOctahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                          unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     return this->drawOctahedron(color);
 }
 
-Figure3D WireFrameParser::parseIcosahedron() {
+Figure3D WireFrameParser::parseIcosahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                           unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     return this->drawIcosahedron(color);
 }
 
-Figure3D WireFrameParser::parseDodecahedron() {
+Figure3D WireFrameParser::parseDodecahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                            unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     return this->drawDodecahedron(color);
 }
 
-Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std::string &name) {
+Figure3D
+WireFrameParser::parseCone(const ini::Configuration &configuration, std::string &name, Color ambientReflection, Color diffuseReflection,
+                           Color specularReflection, unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     double height = configuration[name]["height"].as_double_or_die();
@@ -272,7 +279,8 @@ Figure3D WireFrameParser::parseCone(const ini::Configuration &configuration, std
     return this->drawCone(height, n, color);
 }
 
-Figure3D WireFrameParser::parseCuboid(const ini::Configuration &configuration, std::string &name) {
+Figure3D WireFrameParser::parseCuboid(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
+                                      Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     double height = configuration[name]["height"].as_double_or_die();
@@ -281,7 +289,8 @@ Figure3D WireFrameParser::parseCuboid(const ini::Configuration &configuration, s
     return this->drawCuboid(height, length, depth, color);
 }
 
-Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration, std::string &name) {
+Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
+                                        Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     double height = configuration[name]["height"].as_double_or_die();
@@ -289,14 +298,17 @@ Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration,
     return this->drawCylinder(height, n, color);
 }
 
-Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, std::string &name) {
+Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
+                                      Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     int n = configuration[name]["n"].as_int_or_die();
     return this->drawSphere(n, color);
 }
 
-Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, std::string &name) {
+Figure3D
+WireFrameParser::parseTorus(const ini::Configuration &configuration, std::string &name, Color ambientReflection, Color diffuseReflection,
+                            Color specularReflection, unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     double r = configuration[name]["r"].as_double_or_die();
@@ -307,7 +319,8 @@ Figure3D WireFrameParser::parseTorus(const ini::Configuration &configuration, st
 }
 
 Figure3D
-WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::string &name) {
+WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
+                                Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
     std::string filename = configuration[name]["inputfile"].as_string_or_die();
@@ -316,12 +329,12 @@ WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::st
     return figure;
 }
 
-Figure3D WireFrameParser::drawCube(img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+Figure3D WireFrameParser::drawCube(Color ambientReflection, Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient,
+                                   Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure;
     std::vector<Vector3D> points= {Vector3D::point(1,-1,-1), Vector3D::point(-1,1,-1), Vector3D::point(1,1,1), Vector3D::point(-1,-1,1),
                                    Vector3D::point(1,1,-1), Vector3D::point(-1,-1,-1), Vector3D::point(1,-1,1), Vector3D::point(-1,1,1)};
     figure.setPoints(points);
-    figure.setColor(color);
     std::vector<Face> faces = {Face({0,4,2,6}),Face({4,1,7,2}), Face({1,5,3,7}), Face({5,0,6,3}), Face({6,2,7,3}), Face({0,5,1,4})};
     figure.setFaces(faces);
     Matrix matrix;
@@ -329,6 +342,10 @@ Figure3D WireFrameParser::drawCube(img::Color &color, Vector3D center, Vector3D 
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
@@ -344,7 +361,10 @@ Figure3D WireFrameParser::drawTetrahedron(img::Color &color, Vector3D center, Ve
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
-    
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
@@ -362,6 +382,10 @@ Figure3D WireFrameParser::drawOctahedron(img::Color &color, Vector3D center, Vec
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
@@ -391,11 +415,15 @@ Figure3D WireFrameParser::drawIcosahedron(img::Color &color, Vector3D center, Ve
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
 Figure3D WireFrameParser::drawDodecahedron(img::Color &color, Vector3D center, Vector3D rotation, double scale) {
-    Figure3D figure = parseIcosahedron();
+    Figure3D figure = parseIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
     Figure3D figure2;
     std::vector<Vector3D> points = {};
     for(int i = 0; i < figure.getFaces().size();i++){
@@ -414,6 +442,10 @@ Figure3D WireFrameParser::drawDodecahedron(img::Color &color, Vector3D center, V
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure2;
 }
 
@@ -439,6 +471,10 @@ WireFrameParser::drawCone(double height, int n, img::Color &color, Vector3D cent
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
@@ -457,6 +493,10 @@ WireFrameParser::drawCuboid(double height, double length, double depth, img::Col
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
@@ -491,11 +531,15 @@ Figure3D WireFrameParser::drawCylinder(double height, int n, img::Color &color, 
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
 Figure3D WireFrameParser::drawSphere(int n, img::Color &color, Vector3D center, Vector3D rotation, double scale) {
-    Figure3D figure = parseIcosahedron();
+    Figure3D figure = parseIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
     for (int j = 0; j < n; j++) { //repeat the process n times
         std::vector<Vector3D> test = {};
         std::vector<Face> facesTest = {};
@@ -562,6 +606,10 @@ Figure3D WireFrameParser::drawSphere(int n, img::Color &color, Vector3D center, 
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
@@ -587,6 +635,10 @@ WireFrameParser::drawTorus(double r, double R, int m, int n, img::Color &color, 
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center);
     figure.applyTransformation(matrix);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
@@ -696,6 +748,10 @@ Figure3D WireFrameParser::drawBuckyBall(img::Color &color, Vector3D center, Vect
     }
     figure.setFaces(faces);
     figure.setPoints(points);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setSpecularReflection(specularReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
     return figure;
 }
 
@@ -713,6 +769,7 @@ std::vector<Figure3D> WireFrameParser::parseRail() {
             this->drawCuboid(16, 0.5, 2, colBrown, Vector3D::point(0, 0, 12), Vector3D::vector(0, 0, toRadial(90))));
     figures.push_back(
             this->drawCuboid(16, 0.5, 2, colBrown, Vector3D::point(0, 0, 17), Vector3D::vector(0, 0, toRadial(90))));
+    
     return figures;
 }
 
@@ -749,7 +806,8 @@ std::vector<Figure3D> WireFrameParser::parseDirections() {
     return figures;
 }
 
-Figures3D WireFrameParser::parseFractal(const ini::Configuration &configuration, std::string &name) {
+Figures3D WireFrameParser::parseFractal(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
+                                        Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient) {
     std::vector<std::string> supportedtypes = {"Cube", "Dodecahedron", "Icosahedron", "Octahedron", "Tetrahedron", "BuckyBall"};
     std::string type = configuration[name]["type"].as_string_or_die();
     type = type.substr(type.find("Fractal") + 7, type.length());
@@ -758,7 +816,7 @@ Figures3D WireFrameParser::parseFractal(const ini::Configuration &configuration,
 
     switch(std::distance(supportedtypes.begin(),std::find(supportedtypes.begin(), supportedtypes.end(), type))){
         case 0 :
-            figure = this->drawCube(color);
+            figure = this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient, Vector3D(), Vector3D(), 0);
             break;
         case 1 :
             figure = this->drawDodecahedron(color);
@@ -804,43 +862,112 @@ Figures3D WireFrameParser::generateFractal(Figure3D &figure, const int iteration
     return figures;
 }
 
-Figure3D WireFrameParser::parseBuckyBall() {
+Figure3D WireFrameParser::parseBuckyBall(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                         unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
     return this->drawBuckyBall(color);
 }
 
 Figure3D WireFrameParser::drawMengerSponge(img::Color &color, const int iterations, Vector3D center, Vector3D rotation,
                                            double scale) {
-    Figure3D sponge = this->drawCube(color);
+    Figure3D sponge = this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient, Vector3D(), Vector3D(), 0);
     Figures3D figures = {sponge};
     for(int i = 0; i < iterations; i++) {
         Figures3D temp = {};
         for(Figure3D figure: figures){
             Vector3D tempCenter = figure.getCenter();
-            temp.push_back(this->drawCube(color,Vector3D::point(2*pow(1.0/3.0,i+1)+tempCenter.x,tempCenter.y, 2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(-2*pow(1.0/3.0,i+1)+tempCenter.x,tempCenter.y, 2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(2*pow(1.0/3.0,i+1)+tempCenter.x,tempCenter.y, -2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(-2*pow(1.0/3.0,i+1)+tempCenter.x,tempCenter.y, -2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(2 * pow(1.0 / 3.0, i + 1) + tempCenter.x, tempCenter.y,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(-2 * pow(1.0 / 3.0, i + 1) + tempCenter.x, tempCenter.y,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(2 * pow(1.0 / 3.0, i + 1) + tempCenter.x, tempCenter.y,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(-2 * pow(1.0 / 3.0, i + 1) + tempCenter.x, tempCenter.y,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
 
-            temp.push_back(this->drawCube(color,Vector3D::point(2*pow(1.0/3.0,i+1)+tempCenter.x,2*pow(1.0/3.0,i+1)+tempCenter.y, 2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(-2*pow(1.0/3.0,i+1)+tempCenter.x,2*pow(1.0/3.0,i+1)+tempCenter.y, 2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(2*pow(1.0/3.0,i+1)+tempCenter.x,2*pow(1.0/3.0,i+1)+tempCenter.y, -2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(-2*pow(1.0/3.0,i+1)+tempCenter.x,2*pow(1.0/3.0,i+1)+tempCenter.y, -2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(-2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(-2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
 
-            temp.push_back(this->drawCube(color,Vector3D::point(2*pow(1.0/3.0,i+1)+tempCenter.x,-2*pow(1.0/3.0,i+1)+tempCenter.y, 2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(-2*pow(1.0/3.0,i+1)+tempCenter.x,-2*pow(1.0/3.0,i+1)+tempCenter.y, 2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(2*pow(1.0/3.0,i+1)+tempCenter.x,-2*pow(1.0/3.0,i+1)+tempCenter.y, -2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(-2*pow(1.0/3.0,i+1)+tempCenter.x,-2*pow(1.0/3.0,i+1)+tempCenter.y, -2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(-2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(-2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
 
-            temp.push_back(this->drawCube(color,Vector3D::point(tempCenter.x,2*pow(1.0/3.0,i+1)+tempCenter.y, 2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(tempCenter.x,-2*pow(1.0/3.0,i+1)+tempCenter.y, 2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(tempCenter.x,2*pow(1.0/3.0,i+1)+tempCenter.y, -2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(tempCenter.x,-2*pow(1.0/3.0,i+1)+tempCenter.y, -2*pow(1.0/3.0,i+1)+tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(tempCenter.x, 2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(tempCenter.x, -2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(tempCenter.x, 2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(tempCenter.x, -2 * pow(1.0 / 3.0, i + 1) + tempCenter.y,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
 
-            temp.push_back(this->drawCube(color,Vector3D::point(2*pow(1.0/3.0,i+1)+tempCenter.x,-2*pow(1.0/3.0,i+1)+tempCenter.y, tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(-2*pow(1.0/3.0,i+1)+tempCenter.x,-2*pow(1.0/3.0,i+1)+tempCenter.y, tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(2*pow(1.0/3.0,i+1)+tempCenter.x,2*pow(1.0/3.0,i+1)+tempCenter.y, tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
-            temp.push_back(this->drawCube(color,Vector3D::point(-2*pow(1.0/3.0,i+1)+tempCenter.x,2*pow(1.0/3.0,i+1)+tempCenter.y, tempCenter.z), Vector3D::vector(0,0,0), pow(1.0/3,i+1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.y, tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(-2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          -2 * pow(1.0 / 3.0, i + 1) + tempCenter.y, tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.y, tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
+            temp.push_back(this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient,
+                                          Vector3D::point(-2 * pow(1.0 / 3.0, i + 1) + tempCenter.x,
+                                                          2 * pow(1.0 / 3.0, i + 1) + tempCenter.y, tempCenter.z),
+                                          Vector3D::vector(0, 0, 0), pow(1.0 / 3, i + 1)));
         }
         figures = temp;
     }
@@ -849,7 +976,8 @@ Figure3D WireFrameParser::drawMengerSponge(img::Color &color, const int iteratio
 }
 
 Figure3D
-WireFrameParser::parseMengerSponge(const ini::Configuration &configuration, std::string &name) {
+WireFrameParser::parseMengerSponge(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
+                                   Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient) {
     int iterations = configuration[name]["nrIterations"].as_int_or_die();
     img::Color color = {0,0,0};
 
