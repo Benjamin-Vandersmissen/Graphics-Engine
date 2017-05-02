@@ -20,11 +20,10 @@ private:
     unsigned int ZBuffering;
 protected:
     void rearrangeTriangles(std::vector<Face> &triangles, std::vector<Vector3D> points);
-    bool areAlmostEqual(Vector3D& vector1, Vector3D& vector2);
     Figure3D drawCube(Color ambientReflection, Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient,
                           Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawTetrahedron(Color ambientReflection, Color specularReflection, unsigned int reflectionCoefficient,
-                                 Color diffuseReflection, img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawTetrahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                 unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
     Figure3D drawOctahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
                                 unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
     Figure3D drawIcosahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
@@ -119,6 +118,6 @@ public:
  * **/
 void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d, double dx,
                         double dy, Lights3D &lights, const Color &ambientReflection, const Color &diffuseReflection,
-                        const Color &specularReflection, double reflectionCoefficient);
+                        const Color &specularReflection, double reflectionCoefficient, Vector3D eye);
 
 #endif //GRAPHICS_ENGINE_WIREFRAMEPARSER_H

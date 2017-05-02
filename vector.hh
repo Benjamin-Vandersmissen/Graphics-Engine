@@ -582,5 +582,6 @@ std::ostream &operator<<(std::ostream   &output_stream,
                          const Vector3D &vector);
 
 
+bool areAlmostEqual(Vector3D& vector1, Vector3D& vector2);
 
 #endif // VECTOR_INCLUDED

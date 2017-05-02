@@ -3,3 +3,6 @@
 //
 
 #include "Light.hh"
+Light::Light(): shadowmask(ZBuffer(0,0)){
+
+}

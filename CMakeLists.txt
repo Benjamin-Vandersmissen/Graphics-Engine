@@ -21,6 +21,6 @@ set(SOURCE_FILES
         UsefulFunctions.cc
         UsefulFunctions.hh
         vector.cc
-        vector.hh Figure3D.cc Figure3D.hh WireFrameParser.cc WireFrameParser.hh)
+        vector.hh Figure3D.cc Figure3D.hh WireFrameParser.cc WireFrameParser.hh Light.cc Light.hh)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

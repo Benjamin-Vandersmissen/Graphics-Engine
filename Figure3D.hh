@@ -369,7 +369,7 @@ Matrix translateFigure(const Vector3D& vector);
  *
  * \return A transforamtionmatrix
  * **/
-Matrix getEyeMatrix(Vector3D& eye);
+Matrix getEyeMatrix(Vector3D eye);
 
 /**
  * \brief Writes a figure to an output stream.

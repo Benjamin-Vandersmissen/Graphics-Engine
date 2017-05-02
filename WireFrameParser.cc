@@ -9,6 +9,8 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
     img::Color bgcolor = img::Color(extractColor(configuration["General"]["backgroundcolor"].as_double_tuple_or_die()));
     int nrFigures = configuration["General"]["nrFigures"].as_int_or_die();
     int nrLights = configuration["General"]["nrLights"].as_int_or_default(0);
+    bool shadowsEnabled = configuration["General"]["shadowEnabled"].as_bool_or_default(false);
+    unsigned int shadowmaskSize = configuration["General"]["shadowMask"].as_int_or_default(0);
     std::vector<double> EyeCoords = configuration["General"]["eye"].as_double_tuple_or_die();
     Vector3D eye;
     eye = Vector3D::point(EyeCoords[0], EyeCoords[1], EyeCoords[2]);
@@ -159,14 +161,56 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
 
     applyTransformation(figures, eyeMatrix);
     Lines2D lines = doProjection(figures, ZBuffering != 0);
-    for(Light& light: lights){
-        light.direction *= eyeMatrix;
-        light.location *= eyeMatrix;
-    }
     img::EasyImage image;
     if (ZBuffering < 2)
         image = draw2DLines(lines, size, bgcolor, ZBuffering==1);
     else if (ZBuffering == 2){
+        for(Light& light: lights){
+            if (!light.infinity && shadowsEnabled){
+                Matrix lightMatrix = getEyeMatrix(light.location);
+                Matrix invEyeMatrix = Matrix::inv(eyeMatrix);
+                applyTransformation(figures, invEyeMatrix);
+                applyTransformation(figures, lightMatrix);
+                Lines2D tempLines = doProjection(figures, true);
+                double Xmin = tempLines.front().point1.x, Xmax = tempLines.front().point1.x, Ymin = tempLines.front().point1.y, Ymax = tempLines.front().point1.y;
+                for(Line2D line: tempLines){
+                    Xmin = std::min(Xmin, std::min(line.point1.x,line.point2.x));
+                    Xmax = std::max(Xmax, std::max(line.point1.x,line.point2.x));
+                    Ymin = std::min(Ymin, std::min(line.point1.y,line.point2.y));
+                    Ymax = std::max(Ymax, std::max(line.point1.y,line.point2.y));
+                }
+                double Imagex = shadowmaskSize * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+                double Imagey = shadowmaskSize * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+                light.shadowmask = ZBuffer(Imagex, Imagey);
+                double d = 0.95 * (Imagex/(Xmax-Xmin));
+                double DCx = d * (Xmin+Xmax)/2;
+                double DCy = d * (Ymin+Ymax)/2;
+                double dx = (Imagex/2) - DCx;
+                double dy = (Imagey/2) - DCy;
+                img::EasyImage garbageImage(Imagex, Imagey);
+                for (Figure3D& figure: figures){
+                    triangulate(figure);
+                    for(const Face& face : figure.getFaces()){
+                        Vector3D pointA = figure[face[0]];
+                        Vector3D pointB = figure[face[1]];
+                        Vector3D pointC = figure[face[2]];
+                        Lights3D emptyLights = {};
+                        draw_zbuf_triangle(light.shadowmask, garbageImage, pointA, pointB, pointC, d, dx, dy,
+                                           emptyLights, figure.getAmbientReflection(), figure.getDiffuseReflection(),
+                                           figure.getSpecularReflection(), figure.getReflectionCoefficient(),
+                                           Vector3D::point(0,0,0));
+                    }
+                }
+                light.d = d;
+                light.dx = dx;
+                light.dy = dy;
+                lightMatrix.inv();
+                applyTransformation(figures, lightMatrix);
+                applyTransformation(figures, eyeMatrix);
+            }
+            light.location *= eyeMatrix;
+            light.direction *= eyeMatrix;
+        }
         double Xmin = lines.front().point1.x, Xmax = lines.front().point1.x, Ymin = lines.front().point1.y, Ymax = lines.front().point1.y;
         for(Line2D line: lines){
             Xmin = std::min(Xmin, std::min(line.point1.x,line.point2.x));
@@ -191,7 +235,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                 Vector3D pointC = figure[face[2]];
                 draw_zbuf_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy,
                                    lights, figure.getAmbientReflection(), figure.getDiffuseReflection(),
-                                   figure.getSpecularReflection(), figure.getReflectionCoefficient());
+                                   figure.getSpecularReflection(), figure.getReflectionCoefficient(), eye);
             }
         }
     }
@@ -240,9 +284,7 @@ Figure3D WireFrameParser::parseCube(Color ambientReflection, Color diffuseReflec
 
 Figure3D WireFrameParser::parseTetrahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
                                            unsigned int reflectionCoefficient) {
-    img::Color color = {0,0,0};
-
-    return this->drawTetrahedron(Color(), Color(), 0, Color(), color);
+    return this->drawTetrahedron(ambientReflection, diffuseReflection, specularReflection,reflectionCoefficient);
 }
 
 Figure3D WireFrameParser::parseOctahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
@@ -347,8 +389,8 @@ Figure3D WireFrameParser::drawCube(Color ambientReflection, Color diffuseReflect
     return figure;
 }
 
-Figure3D WireFrameParser::drawTetrahedron(Color ambientReflection, Color specularReflection, unsigned int reflectionCoefficient,
-                                          Color diffuseReflection, img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+Figure3D WireFrameParser::drawTetrahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                          unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure;
     std::vector<Vector3D> points = {Vector3D::point(1,-1,-1), Vector3D::point(-1,1,-1), Vector3D::point(1,1,1), Vector3D::point(-1,-1,1)};
     figure.setPoints(points);
@@ -854,7 +896,7 @@ Figures3D WireFrameParser::parseFractal(const ini::Configuration &configuration,
             figure = this->drawOctahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
             break;
         case 4 :
-            figure = this->drawTetrahedron(Color(), Color(), 0, Color(), color);
+            figure = this->drawTetrahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
             break;
         case 5 :
             figure = this->drawBuckyBall(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
@@ -1006,7 +1048,6 @@ Figure3D
 WireFrameParser::parseMengerSponge(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
                                    Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient) {
     int iterations = configuration[name]["nrIterations"].as_int_or_die();
-    img::Color color = {0,0,0};
 
     return this->drawMengerSponge(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient, iterations);
 }
@@ -1029,7 +1070,14 @@ Figure3D WireFrameParser::mergeFigures(Figures3D &figures) {
         }
     }
     // alleen figuren met dezelfde kleur mogen gemerged worden..
-    return Figure3D(faces, points, figures.front().getColor());
+    Figure3D figure;
+    figure.setAmbientReflection(figures[0].getAmbientReflection());
+    figure.setDiffuseReflection(figures[0].getDiffuseReflection());
+    figure.setSpecularReflection(figures[0].getSpecularReflection());
+    figure.setReflectionCoefficient(figures[0].getReflectionCoefficient());
+    figure.setPoints(points);
+    figure.setFaces(faces);
+    return figure;
 }
 
 void WireFrameParser::rearrangeTriangles(std::vector<Face> &triangles, std::vector<Vector3D> points) {
@@ -1048,10 +1096,7 @@ void WireFrameParser::rearrangeTriangles(std::vector<Face> &triangles, std::vect
     triangles = newTriangles;
 }
 
-bool WireFrameParser::areAlmostEqual(Vector3D &vector1, Vector3D &vector2) {
-    double sigma = 0.0001;
-    return (std::abs(vector1.x-vector2.x) < sigma && std::abs(vector1.y-vector2.y) < sigma && std::abs(vector1.z-vector2.z) < sigma);
-}
+
 
 
 

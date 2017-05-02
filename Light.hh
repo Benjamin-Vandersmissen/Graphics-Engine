@@ -9,6 +9,8 @@
 
 class Light {
 public:
+    Light();
+
     /**
      * \brief The ambient light component.
      * **/
@@ -36,6 +38,10 @@ public:
      * \brief The direction of the lightsource when it's infinite.
      * **/
     Vector3D direction = Vector3D::vector(0,0,0);
+
+    ZBuffer shadowmask;
+
+    double d, dx, dy;
 };
 
 

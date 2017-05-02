@@ -104,7 +104,7 @@ Matrix translateFigure(const Vector3D &vector) {
     return matrix;
 }
 
-Matrix getEyeMatrix(Vector3D &eye) {
+Matrix getEyeMatrix(Vector3D eye) {
     double r = std::sqrt((pow(eye.x,2) + pow(eye.y,2) + pow(eye.z,2)));
     double theta = std::atan2(eye.y,eye.x);
     double phi = std::acos(eye.z/r);
@@ -317,7 +317,7 @@ void triangulate(Figure3D &figure) {
 
 void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d, double dx,
                         double dy, Lights3D &lights, const Color &ambientReflection, const Color &diffuseReflection,
-                        const Color &specularReflection, double reflectionCoefficient) {
+                        const Color &specularReflection, double reflectionCoefficient, Vector3D eye) {
 
     Point2D newA = doProjection(A, d);
     newA.x += dx;
@@ -374,7 +374,6 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
 
             }
         }
-
         for(int x = round(XL+0.5); x <= round(XR-0.5); x++){
             double ZGinverse = 1/(3*A.z) + 1/(3*B.z) + 1/(3*C.z);
             double XG = (newA.x+newB.x+newC.x)/3;
@@ -388,7 +387,7 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
             double dzdx = W.x/(-d*k);
             double dzdy = W.y/(-d*k);
 
-            double Zinverse = 1.001*ZGinverse + (x-XG)*dzdx + (y-YG)*dzdy;
+            double Zinverse = ZGinverse + (x-XG)*dzdx + (y-YG)*dzdy;
             Color localColor;
             for(Light& light: lights){
                 W.normalise();
@@ -402,6 +401,28 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
                 oldPoint.y *= -z;
                 Vector3D point = Vector3D::point(oldPoint.x, oldPoint.y, z);
                 if (!light.infinity){
+                    if (light.shadowmask.size() != 0) {
+                        Vector3D originalPoint = point * Matrix::inv(getEyeMatrix(eye));
+                        Vector3D lightPoint =
+                                originalPoint * getEyeMatrix(light.location * Matrix::inv(getEyeMatrix(eye)));
+                        Point2D projectedPoint = doProjection(lightPoint, light.d);
+                        projectedPoint.x += light.dx;
+                        projectedPoint.y += light.dy;
+                        double Ax = projectedPoint.x - std::floor(projectedPoint.x);
+                        double Ay = projectedPoint.y - std::floor(projectedPoint.y);
+                        double ZeInverse = (1 - Ax) * light.shadowmask[std::floor(projectedPoint.y)][std::floor(projectedPoint.x)] +
+                                           Ax * light.shadowmask[std::floor(projectedPoint.y)][std::ceil(projectedPoint.x)];
+                        double ZfInverse = (1 - Ax) * light.shadowmask[std::ceil(projectedPoint.y)][std::floor(projectedPoint.x)] +
+                                           Ax * light.shadowmask[std::ceil(projectedPoint.y)][std::ceil(projectedPoint.x)];
+                        double Zestimate = (1 - Ay) * ZeInverse + Ay * ZfInverse;
+
+//                    std::cerr << Zestimate << ' ' << light.shadowmask[projectedPoint.y][projectedPoint.x] << std::endl;
+
+                        if (not(std::abs(Zestimate - 1/lightPoint.z) < 0.0001)) {
+                            continue;
+                        }
+                    }
+
                     Vector3D L = light.location - point;
                     L.normalise();
                     double cosinusA = (W.x*L.x + W.y*L.y + W.z*L.z);
@@ -433,7 +454,6 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
                     }
                 }
             }
-
             if (buf[y][x] >= Zinverse){
                 buf[y][x] = Zinverse;
                 Color color = baseColor + localColor;
