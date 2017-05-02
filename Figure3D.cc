@@ -391,14 +391,13 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
             double Zinverse = 1.001*ZGinverse + (x-XG)*dzdx + (y-YG)*dzdy;
             Color localColor;
             for(Light& light: lights){
-                Vector3D N = W;
                 W.normalise();
                 Point2D oldPoint = Point2D(x,y);
                 oldPoint.x -= dx;
                 oldPoint.y -= dy;
                 oldPoint.x /= d;
                 oldPoint.y /= d;
-                double z = 1/(Zinverse/1.001);
+                double z = 1/Zinverse;
                 oldPoint.x *= -z;
                 oldPoint.y *= -z;
                 Vector3D point = Vector3D::point(oldPoint.x, oldPoint.y, z);
@@ -460,6 +459,11 @@ void operator+=(Color &col1, const Color &col2) {
 
 Color operator*(const Color &col1, const double d) {
     return Color(col1.R*d, col1.G*d, col1.B*d);
+}
+
+std::ostream &operator<<(std::ostream &stream, Color color) {
+    stream << "R: " << color.R << " G: " << color.G << " B: " << color.B;
+    return stream;
 }
 
 Color operator*(const Color &col1, const Color &col2) {

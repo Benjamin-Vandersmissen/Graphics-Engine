@@ -23,18 +23,30 @@ protected:
     bool areAlmostEqual(Vector3D& vector1, Vector3D& vector2);
     Figure3D drawCube(Color ambientReflection, Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient,
                           Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawTetrahedron(img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawOctahedron(img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawIcosahedron(img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawDodecahedron(img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawCone(double height, int n, img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawCuboid(double height, double length, double depth, img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawCylinder(double height, int n, img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawSphere(int n, img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawTorus(double r, double R, int m, int n, img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawBuckyBall(img::Color& color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
-    Figure3D drawMengerSponge(img::Color &color, const int iterations, Vector3D center = Vector3D::point(0, 0, 0),
-                              Vector3D rotation = Vector3D::vector(0, 0, 0), double scale = 1);
+    Figure3D drawTetrahedron(Color ambientReflection, Color specularReflection, unsigned int reflectionCoefficient,
+                                 Color diffuseReflection, img::Color &color, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawOctahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawIcosahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                 unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D
+    drawDodecahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                         unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawCone(double height, int n, Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                          unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawCuboid(double length, double height, double depth, Color ambientReflection, Color diffuseReflection,
+                            Color specularReflection, unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0),
+                            double scale = 1);
+    Figure3D drawCylinder(double height, int n, Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                              unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawSphere(int n, Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                            unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawTorus(double r, double R, int m, int n, Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                           unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawBuckyBall(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                               unsigned int reflectionCoefficient, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
+    Figure3D drawMengerSponge(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                  unsigned int reflectionCoefficient, const int iterations, Vector3D center = Vector3D::point(0,0,0), Vector3D rotation = Vector3D::vector(0,0,0), double scale = 1);
     Figures3D generateFractal(Figure3D& figure, const int iterations, const double scale);
 
 public:
@@ -75,7 +87,8 @@ public:
      * **/
 
     std::vector<Figure3D> parseRail();
-    std::vector<Figure3D> parseTrain();
+    std::vector<Figure3D> parseTrain(Color baseColor);
+    std::vector<Figure3D> parseStation(Color baseColor);
     std::vector<Figure3D> parseDirections();
     Figure3D mergeFigures(Figures3D& figures);
 //    Figure3D parseMobius(const ini::Configuration & configuration, std::string& name, img::Color& color);

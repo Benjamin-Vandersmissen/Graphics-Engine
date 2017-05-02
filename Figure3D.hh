@@ -109,6 +109,8 @@ Color operator+(const Color& col1, const Color& col2);
 
 Color operator*(const Color& col1, const double d);
 
+std::ostream& operator<<(std::ostream& stream, Color color);
+
 class Figure3D {
 private:
 

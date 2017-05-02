@@ -109,7 +109,10 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         }
 
         else if (type == "Train"){
-            tempfigures = this->parseTrain();
+            tempfigures = this->parseTrain(ambientReflection);
+        }
+        else if (type == "Station"){
+            tempfigures = this->parseStation(ambientReflection);
         }
 
         else if (type == "Directions"){
@@ -148,10 +151,6 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                                    +CenterPoint.z); //translate the whole Figure if the centerpoint isn't (0,0,0);
             m = translateFigure(vec);
             figure.applyTransformation(m);
-            figure.setAmbientReflection(ambientReflection);
-            figure.setDiffuseReflection(diffuseReflection);
-            figure.setSpecularReflection(specularReflection);
-            figure.setReflectionCoefficient(reflectionCoefficient);
         }
         figures.insert(figures.end(), tempfigures.begin(), tempfigures.end());
     }
@@ -186,7 +185,6 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         double dy = (Imagey/2) - DCy;
         for (Figure3D& figure: figures){
             triangulate(figure);
-            int i = 0;
             for(const Face& face : figure.getFaces()){
                 Vector3D pointA = figure[face[0]];
                 Vector3D pointB = figure[face[1]];
@@ -194,7 +192,6 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                 draw_zbuf_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy,
                                    lights, figure.getAmbientReflection(), figure.getDiffuseReflection(),
                                    figure.getSpecularReflection(), figure.getReflectionCoefficient());
-                i++;
             }
         }
     }
@@ -238,35 +235,35 @@ const img::EasyImage &WireFrameParser::getImage() const {
 Figure3D WireFrameParser::parseCube(Color ambientReflection, Color diffuseReflection, Color specularReflection,
                                     unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
-    return this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient, Vector3D(), Vector3D(), 0);
+    return this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
 Figure3D WireFrameParser::parseTetrahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
                                            unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
-    return this->drawTetrahedron(color);
+    return this->drawTetrahedron(Color(), Color(), 0, Color(), color);
 }
 
 Figure3D WireFrameParser::parseOctahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
                                           unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
-    return this->drawOctahedron(color);
+    return this->drawOctahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
 Figure3D WireFrameParser::parseIcosahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
                                            unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
-    return this->drawIcosahedron(color);
+    return this->drawIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
 Figure3D WireFrameParser::parseDodecahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
                                             unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
 
-    return this->drawDodecahedron(color);
+    return this->drawDodecahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
 Figure3D
@@ -276,7 +273,7 @@ WireFrameParser::parseCone(const ini::Configuration &configuration, std::string 
 
     double height = configuration[name]["height"].as_double_or_die();
     int n = configuration[name]["n"].as_int_or_die();
-    return this->drawCone(height, n, color);
+    return this->drawCone(height, n, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
 Figure3D WireFrameParser::parseCuboid(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
@@ -286,7 +283,8 @@ Figure3D WireFrameParser::parseCuboid(const ini::Configuration &configuration, s
     double height = configuration[name]["height"].as_double_or_die();
     double length = configuration[name]["length"].as_double_or_die();
     double depth = configuration[name]["depth"].as_double_or_die();
-    return this->drawCuboid(height, length, depth, color);
+    return this->drawCuboid(length, height, depth, ambientReflection, diffuseReflection, specularReflection,
+                            reflectionCoefficient, Vector3D(), Vector3D(), 0);
 }
 
 Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
@@ -295,7 +293,7 @@ Figure3D WireFrameParser::parseCylinder(const ini::Configuration &configuration,
 
     double height = configuration[name]["height"].as_double_or_die();
     int n = 2*configuration[name]["n"].as_int_or_die();
-    return this->drawCylinder(height, n, color);
+    return this->drawCylinder(height, n, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
 Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
@@ -303,7 +301,7 @@ Figure3D WireFrameParser::parseSphere(const ini::Configuration &configuration, s
     img::Color color = {0,0,0};
 
     int n = configuration[name]["n"].as_int_or_die();
-    return this->drawSphere(n, color);
+    return this->drawSphere(n, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
 Figure3D
@@ -315,7 +313,7 @@ WireFrameParser::parseTorus(const ini::Configuration &configuration, std::string
     double R = configuration[name]["R"].as_double_or_die();
     int m = configuration[name]["m"].as_int_or_die();
     int n = configuration[name]["n"].as_int_or_die();
-    return this->drawTorus(r, R, m, n, color);
+    return this->drawTorus(r, R, m, n, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
 Figure3D
@@ -349,13 +347,14 @@ Figure3D WireFrameParser::drawCube(Color ambientReflection, Color diffuseReflect
     return figure;
 }
 
-Figure3D WireFrameParser::drawTetrahedron(img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+Figure3D WireFrameParser::drawTetrahedron(Color ambientReflection, Color specularReflection, unsigned int reflectionCoefficient,
+                                          Color diffuseReflection, img::Color &color, Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure;
     std::vector<Vector3D> points = {Vector3D::point(1,-1,-1), Vector3D::point(-1,1,-1), Vector3D::point(1,1,1), Vector3D::point(-1,-1,1)};
     figure.setPoints(points);
     std::vector<Face> faces = {Face({0,1,2}), Face({1,3,2}), Face({0,3,1}), Face({0,2,3})};
     figure.setFaces(faces);
-    figure.setColor(color);
+    
     Matrix matrix;
     matrix = scaleFigure(scale);
     figure.applyTransformation(matrix);
@@ -368,7 +367,8 @@ Figure3D WireFrameParser::drawTetrahedron(img::Color &color, Vector3D center, Ve
     return figure;
 }
 
-Figure3D WireFrameParser::drawOctahedron(img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+Figure3D WireFrameParser::drawOctahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                         unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure;
     std::vector<Vector3D> points = {Vector3D::point(1,0,0), Vector3D::point(0,1,0), Vector3D::point(-1,0,0), Vector3D::point(0,-1,0),
                                     Vector3D::point(0,0,-1), Vector3D::point(0,0,1)};
@@ -376,7 +376,6 @@ Figure3D WireFrameParser::drawOctahedron(img::Color &color, Vector3D center, Vec
     std::vector<Face> faces = {Face({0,1,5}), Face({1,2,5}), Face({2,3,5}), Face({3,0,5}),
                                Face({1,0,4}), Face({2,1,4}), Face({3,2,4}), Face({0,3,4})};
     figure.setFaces(faces);
-    figure.setColor(color);
     Matrix matrix;
     matrix = scaleFigure(scale);
     figure.applyTransformation(matrix);
@@ -389,7 +388,8 @@ Figure3D WireFrameParser::drawOctahedron(img::Color &color, Vector3D center, Vec
     return figure;
 }
 
-Figure3D WireFrameParser::drawIcosahedron(img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+Figure3D WireFrameParser::drawIcosahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                          unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure;
     std::vector<Vector3D> points = {Vector3D::point(0,0, std::sqrt(5)/2)};
     for(int i = 2; i < 12; i ++){
@@ -409,7 +409,7 @@ Figure3D WireFrameParser::drawIcosahedron(img::Color &color, Vector3D center, Ve
                                Face({4,8,9}), Face({4,9,5}), Face({5,9,10}), Face({5,10,1}), Face({1,10,6}),
                                Face({11,7,6}), Face({11,8,7}), Face({11,9,8}), Face({11,10,9}), Face({11,6,10})};
     figure.setFaces(faces);
-    figure.setColor(color);
+    
     Matrix matrix;
     matrix = scaleFigure(scale);
     figure.applyTransformation(matrix);
@@ -422,7 +422,8 @@ Figure3D WireFrameParser::drawIcosahedron(img::Color &color, Vector3D center, Ve
     return figure;
 }
 
-Figure3D WireFrameParser::drawDodecahedron(img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+Figure3D WireFrameParser::drawDodecahedron(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                           unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure = parseIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
     Figure3D figure2;
     std::vector<Vector3D> points = {};
@@ -436,21 +437,21 @@ Figure3D WireFrameParser::drawDodecahedron(img::Color &color, Vector3D center, V
                                Face({16,8,7,6,15}), Face({15,6,5,14,19})};
 
     figure2.setFaces(faces);
-    figure2.setColor(color);
     Matrix matrix;
     matrix = scaleFigure(scale);
     figure.applyTransformation(matrix);
     matrix = rotateFigureX(rotation.x)*rotateFigureY(rotation.y)*rotateFigureZ(rotation.z)*translateFigure(center); 
     figure.applyTransformation(matrix);
-    figure.setAmbientReflection(ambientReflection);
-    figure.setDiffuseReflection(diffuseReflection);
-    figure.setSpecularReflection(specularReflection);
-    figure.setReflectionCoefficient(reflectionCoefficient);
+    figure2.setAmbientReflection(ambientReflection);
+    figure2.setDiffuseReflection(diffuseReflection);
+    figure2.setSpecularReflection(specularReflection);
+    figure2.setReflectionCoefficient(reflectionCoefficient);
     return figure2;
 }
 
 Figure3D
-WireFrameParser::drawCone(double height, int n, img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+WireFrameParser::drawCone(double height, int n, Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                          unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure;
     Vector3D top = Vector3D::point(0,0,height);
     std::vector<Vector3D> points = {};
@@ -463,7 +464,7 @@ WireFrameParser::drawCone(double height, int n, img::Color &color, Vector3D cent
     }
     faces.push_back(Face(circleIndices));
     points.push_back(top);
-    figure.setColor(color);
+    
     figure.setFaces(faces);
     figure.setPoints(points);
     Matrix matrix;
@@ -479,13 +480,14 @@ WireFrameParser::drawCone(double height, int n, img::Color &color, Vector3D cent
 }
 
 Figure3D
-WireFrameParser::drawCuboid(double height, double length, double depth, img::Color &color, Vector3D center, Vector3D rotation,
+WireFrameParser::drawCuboid(double length, double height, double depth, Color ambientReflection, Color diffuseReflection,
+                            Color specularReflection, unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation,
                             double scale) {
     Figure3D figure;
     std::vector<Vector3D> points= {Vector3D::point(length/2,-height/2,-depth/2), Vector3D::point(-length/2,height/2,-depth/2), Vector3D::point(length/2,height/2,depth/2), Vector3D::point(-length/2,-height/2,depth/2),
                                    Vector3D::point(length/2,height/2,-depth/2), Vector3D::point(-length/2,-height/2,-depth/2), Vector3D::point(length/2,-height/2,depth/2), Vector3D::point(-length/2,height/2,depth/2)};
     figure.setPoints(points);
-    figure.setColor(color);
+    
     std::vector<Face> faces = {Face({0,4,2,6}),Face({4,1,7,2}), Face({1,5,3,7}), Face({5,0,6,3}), Face({6,2,7,3}), Face({0,5,1,4})};
     figure.setFaces(faces);
     Matrix matrix;
@@ -500,7 +502,8 @@ WireFrameParser::drawCuboid(double height, double length, double depth, img::Col
     return figure;
 }
 
-Figure3D WireFrameParser::drawCylinder(double height, int n, img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+Figure3D WireFrameParser::drawCylinder(double height, int n, Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                       unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure;
     std::vector<Vector3D> points = {};
     std::vector<Face> faces = {};
@@ -523,7 +526,7 @@ Figure3D WireFrameParser::drawCylinder(double height, int n, img::Color &color, 
 
     }
     faces.push_back(Face(circleIndices));
-    figure.setColor(color);
+    
     figure.setPoints(points);
     figure.setFaces(faces);
     Matrix matrix;
@@ -538,8 +541,9 @@ Figure3D WireFrameParser::drawCylinder(double height, int n, img::Color &color, 
     return figure;
 }
 
-Figure3D WireFrameParser::drawSphere(int n, img::Color &color, Vector3D center, Vector3D rotation, double scale) {
-    Figure3D figure = parseIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
+Figure3D WireFrameParser::drawSphere(int n, Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                     unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
+    Figure3D figure = drawIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
     for (int j = 0; j < n; j++) { //repeat the process n times
         std::vector<Vector3D> test = {};
         std::vector<Face> facesTest = {};
@@ -614,7 +618,8 @@ Figure3D WireFrameParser::drawSphere(int n, img::Color &color, Vector3D center, 
 }
 
 Figure3D
-WireFrameParser::drawTorus(double r, double R, int m, int n, img::Color &color, Vector3D center, Vector3D rotation, double scale) {
+WireFrameParser::drawTorus(double r, double R, int m, int n, Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                           unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
     Figure3D figure;
     std::vector<Vector3D> points = {};
     std::vector<Face> faces = {};
@@ -627,7 +632,7 @@ WireFrameParser::drawTorus(double r, double R, int m, int n, img::Color &color, 
             faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
         }
     }
-    figure.setColor(color);
+    
     figure.setFaces(faces);
     figure.setPoints(points);
     Matrix matrix;
@@ -642,8 +647,9 @@ WireFrameParser::drawTorus(double r, double R, int m, int n, img::Color &color, 
     return figure;
 }
 
-Figure3D WireFrameParser::drawBuckyBall(img::Color &color, Vector3D center, Vector3D rotation, double scale) {
-    Figure3D figure = drawIcosahedron(color);
+Figure3D WireFrameParser::drawBuckyBall(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                        unsigned int reflectionCoefficient, Vector3D center, Vector3D rotation, double scale) {
+    Figure3D figure = drawIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
     std::vector<Vector3D> points = {};
     std::vector<Face> faces = {};
     std::vector<Face> triangles = {};
@@ -757,37 +763,57 @@ Figure3D WireFrameParser::drawBuckyBall(img::Color &color, Vector3D center, Vect
 
 std::vector<Figure3D> WireFrameParser::parseRail() {
     Figures3D figures = {};
-    img::Color colGray = img::Color(130,130,130);
-    img::Color colBrown = img::Color(127,57,0);
-    figures.push_back(this->drawCylinder(20, 20, colGray, Vector3D::point(-8, 0, 0), Vector3D()));
-    figures.push_back(this->drawCylinder(20, 20, colGray, Vector3D::point(8, 0, 0), Vector3D()));
+    Color colGray = Color(0.5,0.5,0.5);
+    Color colBrown = Color(0.5,0.22,0);
+    figures.push_back(this->drawCylinder(20, 50, colGray, colGray, colGray, 20, Vector3D::point(-8, 0, 0)));
+    figures.push_back(this->drawCylinder(20, 50, colGray, colGray, colGray, 20, Vector3D::point(8, 0, 0)));
     figures.push_back(
-            this->drawCuboid(16, 0.5, 2, colBrown, Vector3D::point(0, 0, 2), Vector3D::vector(0, 0, toRadial(90))));
+            this->drawCuboid(0.5, 16, 2, colBrown, colBrown, colBrown, 5, Vector3D::point(0, 0, 2),
+                             Vector3D::vector(0, 0, toRadial(90))));
     figures.push_back(
-            this->drawCuboid(16, 0.5, 2, colBrown, Vector3D::point(0, 0, 7), Vector3D::vector(0, 0, toRadial(90))));
+            this->drawCuboid(0.5, 16, 2, colBrown, colBrown, colBrown, 5, Vector3D::point(0, 0, 7),
+                             Vector3D::vector(0, 0, toRadial(90))));
     figures.push_back(
-            this->drawCuboid(16, 0.5, 2, colBrown, Vector3D::point(0, 0, 12), Vector3D::vector(0, 0, toRadial(90))));
+            this->drawCuboid(0.5, 16, 2, colBrown, colBrown, colBrown, 5, Vector3D::point(0, 0, 12),
+                             Vector3D::vector(0, 0, toRadial(90))));
     figures.push_back(
-            this->drawCuboid(16, 0.5, 2, colBrown, Vector3D::point(0, 0, 17), Vector3D::vector(0, 0, toRadial(90))));
-    
+            this->drawCuboid(0.5, 16, 2, colBrown, colBrown, colBrown, 5, Vector3D::point(0, 0, 17),
+                             Vector3D::vector(0, 0, toRadial(90))));
     return figures;
 }
 
-std::vector<Figure3D> WireFrameParser::parseTrain() {
+std::vector<Figure3D> WireFrameParser::parseTrain(Color baseColor) {
     Figures3D figures = {};
-    img::Color colRed = img::Color(50,0,0);
-    img::Color colDkGray = img::Color(110,110,110);
-    img::Color colBlack = img::Color(0,0,0);
-    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, Vector3D::point(-9, 2.5, 9), Vector3D::vector(0,M_PI/2,0), 2.5));
-    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, Vector3D::point(7, 2.5, 9), Vector3D::vector(0,M_PI/2,0), 2.5));
-    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, Vector3D::point(-9, 2.5, 3), Vector3D::vector(0,M_PI/2,0), 2.5));
-    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, Vector3D::point(7, 2.5, 3), Vector3D::vector(0,M_PI/2,0), 2.5));
-    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, Vector3D::point(-9, 2.5, 15), Vector3D::vector(0,M_PI/2,0), 2.5));
-    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, Vector3D::point(7, 2.5, 15), Vector3D::vector(0,M_PI/2,0), 2.5));
-    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, Vector3D::point(-9, 2.5, 21), Vector3D::vector(0,M_PI/2,0), 2.5));
-    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, Vector3D::point(7, 2.5, 21), Vector3D::vector(0,M_PI/2,0), 2.5));
-    figures.push_back(this->drawCuboid(10,16,25,colRed, Vector3D::point(0,7.5,12.5)));
-    figures.push_back(this->drawCuboid(4, 14, 23, colBlack, Vector3D::point(0,14.5, 12.5)));
+    Color colDkGray = Color(0.42,0.42,0.42);
+    Color colBlack = Color(0.05,0.05,0.05); //This ain't no VantaBlack
+    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, colDkGray, colDkGray, 20, Vector3D::point(-9, 2.5, 9),
+                                         Vector3D::vector(0, M_PI / 2, 0), 2.5));
+    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, colDkGray, colDkGray, 20, Vector3D::point(7, 2.5, 9),
+                                         Vector3D::vector(0, M_PI / 2, 0), 2.5));
+    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, colDkGray, colDkGray, 20, Vector3D::point(-9, 2.5, 3),
+                                         Vector3D::vector(0, M_PI / 2, 0), 2.5));
+    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, colDkGray, colDkGray, 20, Vector3D::point(7, 2.5, 3),
+                                         Vector3D::vector(0, M_PI / 2, 0), 2.5));
+    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, colDkGray, colDkGray, 20, Vector3D::point(-9, 2.5, 15),
+                                         Vector3D::vector(0, M_PI / 2, 0), 2.5));
+    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, colDkGray, colDkGray, 20, Vector3D::point(7, 2.5, 15),
+                                         Vector3D::vector(0, M_PI / 2, 0), 2.5));
+    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, colDkGray, colDkGray, 20, Vector3D::point(-9, 2.5, 21),
+                                         Vector3D::vector(0, M_PI / 2, 0), 2.5));
+    figures.push_back(this->drawCylinder(0.8, 50, colDkGray, colDkGray, colDkGray, 20, Vector3D::point(7, 2.5, 21),
+                                         Vector3D::vector(0, M_PI / 2, 0), 2.5));
+    figures.push_back(this->drawCuboid(16, 10, 25, baseColor, baseColor, baseColor, 15, Vector3D::point(0, 7.5, 12.5)));
+    figures.push_back(this->drawCuboid(14, 4, 23, colBlack, colBlack, colBlack, 15, Vector3D::point(0, 14.5, 12.5)));
+    return figures;
+}
+
+std::vector<Figure3D> WireFrameParser::parseStation(Color baseColor) {
+    Figures3D figures = {};
+    Color colDKGray = Color(0.42,0.42,0.42);
+    figures.push_back(this->drawCuboid(25, 20, 12, baseColor, baseColor, baseColor, 5, Vector3D::point(12.5,10,4)));
+    figures.push_back(this->drawCuboid(25 ,1,20, colDKGray, colDKGray, colDKGray, 20, Vector3D::point(12.5,20.5,0)));
+    figures.push_back(this->drawCylinder(20,20, colDKGray, colDKGray, colDKGray, 20, Vector3D::point(1,0,-9), Vector3D::vector(toRadial(-90),0, 0)));
+    figures.push_back(this->drawCylinder(20,20, colDKGray, colDKGray, colDKGray, 20, Vector3D::point(24,0,-9), Vector3D::vector(toRadial(-90),0, 0)));
     return figures;
 }
 
@@ -816,22 +842,22 @@ Figures3D WireFrameParser::parseFractal(const ini::Configuration &configuration,
 
     switch(std::distance(supportedtypes.begin(),std::find(supportedtypes.begin(), supportedtypes.end(), type))){
         case 0 :
-            figure = this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient, Vector3D(), Vector3D(), 0);
+            figure = this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
             break;
         case 1 :
-            figure = this->drawDodecahedron(color);
+            figure = this->drawDodecahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
             break;
         case 2 :
-            figure = this->drawIcosahedron(color);
+            figure = this->drawIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
             break;
         case 3 :
-            figure = this->drawOctahedron(color);
+            figure = this->drawOctahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
             break;
         case 4 :
-            figure = this->drawTetrahedron(color);
+            figure = this->drawTetrahedron(Color(), Color(), 0, Color(), color);
             break;
         case 5 :
-            figure = this->drawBuckyBall(color);
+            figure = this->drawBuckyBall(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
             break;
         default:
             std::cerr << "Unknown type: " << configuration[name][type].as_string_or_die() << std::endl;
@@ -865,12 +891,13 @@ Figures3D WireFrameParser::generateFractal(Figure3D &figure, const int iteration
 Figure3D WireFrameParser::parseBuckyBall(Color ambientReflection, Color diffuseReflection, Color specularReflection,
                                          unsigned int reflectionCoefficient) {
     img::Color color = {0,0,0};
-    return this->drawBuckyBall(color);
+    return this->drawBuckyBall(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
 }
 
-Figure3D WireFrameParser::drawMengerSponge(img::Color &color, const int iterations, Vector3D center, Vector3D rotation,
+Figure3D WireFrameParser::drawMengerSponge(Color ambientReflection, Color diffuseReflection, Color specularReflection,
+                                           unsigned int reflectionCoefficient, const int iterations, Vector3D center, Vector3D rotation,
                                            double scale) {
-    Figure3D sponge = this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient, Vector3D(), Vector3D(), 0);
+    Figure3D sponge = this->drawCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
     Figures3D figures = {sponge};
     for(int i = 0; i < iterations; i++) {
         Figures3D temp = {};
@@ -981,7 +1008,7 @@ WireFrameParser::parseMengerSponge(const ini::Configuration &configuration, std:
     int iterations = configuration[name]["nrIterations"].as_int_or_die();
     img::Color color = {0,0,0};
 
-    return this->drawMengerSponge(color, iterations);
+    return this->drawMengerSponge(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient, iterations);
 }
 
 Figure3D WireFrameParser::mergeFigures(Figures3D &figures) {
@@ -1030,6 +1057,8 @@ bool WireFrameParser::areAlmostEqual(Vector3D &vector1, Vector3D &vector2) {
 
 
 
+
+
 //
 //Figure3D WireFrameParser::parseMobius(const ini::Configuration &configuration, std::string &name, img::Color &color) {
 //    Figure3D figure;
@@ -1048,7 +1077,7 @@ bool WireFrameParser::areAlmostEqual(Vector3D &vector1, Vector3D &vector2) {
 //            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
 //        }
 //    }
-//    figure.setColor(color);
+//    
 //    figure.setFaces(faces);
 //    figure.setPoints(points);
 //    return figure;
@@ -1071,7 +1100,7 @@ bool WireFrameParser::areAlmostEqual(Vector3D &vector1, Vector3D &vector2) {
 //            faces.push_back(Face({m*i+j, m*((i+1)%n) + j, m*((i+1)%n) + (j+1)%m, m*i + (j+1)%m}));
 //        }
 //    }
-//    figure.setColor(color);
+//    
 //    figure.setFaces(faces);
 //    figure.setPoints(points);
 //    return figure;
