@@ -45,6 +45,10 @@ img::EasyImage generate_image(const ini::Configuration &configuration)
         WireFrameParser parser(configuration, 2);
         image = parser.getImage();
     }
+    else if (type == "TexturedZBuffering"){
+        WireFrameParser parser(configuration, 3);
+        image = parser.getImage();
+    }
 	return image;
 }
 

@@ -148,12 +148,16 @@ private:
      * \brief The reflectioncoefficient.
      * **/
      double reflectionCoefficient;
+
+
 public:
 
     /**
      * \brief If the image needs to be drawn in rainbow coloring instead of it's normal color.
      * **/
     bool rainbow = false;
+
+    img::EasyImage* texture;
 
     /**
      * \brief Returns the faces.

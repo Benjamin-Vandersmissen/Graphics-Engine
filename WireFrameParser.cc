@@ -44,6 +44,9 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         lights.push_back(newLight);
     }
 
+    std::map<std::string, img::EasyImage*> allTextures = {}; //asociates a path with a pointer to an image
+    allTextures[""] = NULL; //default
+
     for(int i = 0; i < nrFigures; i++){
         std::string name = "Figure" + std::to_string(i);
         std::string type = configuration[name.c_str()]["type"].as_string_or_die();
@@ -59,6 +62,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         Color specularReflection = configuration[name.c_str()]["specularReflection"].as_double_tuple_or_default({0,0,0});
         double reflectionCoefficient = configuration[name.c_str()]["reflectionCoefficient"].as_double_or_default(0);
         bool rainbow = configuration[name.c_str()]["rainbow"].as_bool_or_default(false);
+        std::string texturePath = configuration[name.c_str()]["texturePath"].as_string_or_default("");
 
         Matrix m;
 
@@ -133,6 +137,18 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
             tempfigures.push_back(this->parseMengerSponge(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         img::Color col = {0,0,0};
+        if (std::find(allTextures.begin(), allTextures.end(), texturePath) == allTextures.end()){
+            try{
+                std::ifstream textureFile(texturePath);
+                img::EasyImage* newTexture = new img::EasyImage;
+                textureFile >> *newTexture;
+                allTextures[texturePath] = newTexture;
+            }
+            catch(std::exception& e){
+                std::cerr << "invalid texture: " << texturePath << std::endl;
+                allTextures[texturePath] = NULL;
+            }
+        }
         for(Figure3D& figure: tempfigures) {
 
             figure.rainbow = rainbow;
@@ -153,10 +169,10 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                                    +CenterPoint.z); //translate the whole Figure if the centerpoint isn't (0,0,0);
             m = translateFigure(vec);
             figure.applyTransformation(m);
+            figure.texture = allTextures[texturePath];
         }
         figures.insert(figures.end(), tempfigures.begin(), tempfigures.end());
     }
-
     Matrix eyeMatrix = getEyeMatrix(eye);
 
     applyTransformation(figures, eyeMatrix);
@@ -236,6 +252,59 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                 draw_zbuf_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy,
                                    lights, figure.getAmbientReflection(), figure.getDiffuseReflection(),
                                    figure.getSpecularReflection(), figure.getReflectionCoefficient(), eye);
+            }
+        }
+    }
+    else if (ZBuffering == 3){
+        double Xmin = lines.front().point1.x, Xmax = lines.front().point1.x, Ymin = lines.front().point1.y, Ymax = lines.front().point1.y;
+        for(Line2D line: lines){
+            Xmin = std::min(Xmin, std::min(line.point1.x,line.point2.x));
+            Xmax = std::max(Xmax, std::max(line.point1.x,line.point2.x));
+            Ymin = std::min(Ymin, std::min(line.point1.y,line.point2.y));
+            Ymax = std::max(Ymax, std::max(line.point1.y,line.point2.y));
+        }
+        double Imagex = size * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+        double Imagey = size * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+        image = img::EasyImage(roundToInt(Imagex), roundToInt(Imagey), bgcolor);
+        ZBuffer buffer(roundToInt(Imagex), roundToInt(Imagey));
+        double d = 0.95 * (Imagex/ (Xmax-Xmin));
+        double DCx = d * (Xmin+Xmax)/2;
+        double DCy = d * (Ymin+Ymax)/2;
+        double dx = (Imagex/2) - DCx;
+        double dy = (Imagey/2) - DCy;
+        std::vector<std::vector<int> > triangles = {};
+        for(int i = 0; i < Imagey; i++){
+            std::vector<int> row = {};
+            for(int j = 0; j < Imagex; j++){
+                row.push_back(-1);
+            }
+            triangles.push_back(row);
+        }
+        int triangle = 0;
+        for(Figure3D& figure: figures){
+            for(const Face& face : figure.getFaces()){
+                Vector3D A = figure[face[0]];
+                Vector3D B = figure[face[1]];
+                Vector3D C = figure[face[2]];
+                Vector3D AB = B-A;
+                Vector3D AC = C-A;
+                Vector3D normal = Vector3D::cross(AB, AC);
+                double a = normal.x;
+                double b = normal.y;
+                double c = normal.z;
+                double d = -(a*A.x + b*A.y+c*A.z);
+                std::cerr << a << "x + " << b << "y + "
+            }
+        }
+        for (Figure3D& figure: figures){
+            triangulate(figure);
+            for(const Face& face : figure.getFaces()){
+                Vector3D pointA = figure[face[0]];
+                Vector3D pointB = figure[face[1]];
+                Vector3D pointC = figure[face[2]];
+                draw_textured_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy, triangles
+                                       , triangle);
+                triangle++;
             }
         }
     }

@@ -463,6 +463,156 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
     }
 }
 
+
+void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d,
+                            double dx,
+                            double dy, std::vector<std::vector<int> > &triangles, unsigned int triangleNr) {
+
+    Point2D newA = doProjection(A, d);
+    newA.x += dx;
+    newA.y += dy;
+
+    Point2D newB = doProjection(B, d);
+    newB.x += dx;
+    newB.y += dy;
+
+    Point2D newC = doProjection(C, d);
+    newC.x += dx;
+    newC.y += dy;
+
+    int Ymin = round(std::min(newA.y, std::min(newB.y, newC.y))+0.5);
+    int Ymax = round(std::max(newA.y, std::max(newB.y, newC.y))-0.5);
+
+    Line2D AB = {newA,newB, img::Color()};
+    Line2D AC = {newA,newC, img::Color()};
+    Line2D BC = {newB,newC, img::Color()};
+    Lines2D lines = {AB,AC,BC};
+
+//    color1.blue = std::rand()%100 + 25;
+//    color1.red = std::rand()%100 + 25;
+//    color1.green = std::rand()%100 + 25;
+
+//    Color baseColor;
+//    for(Light& light: lights){
+//        baseColor += light.ambientLight*ambientReflection;
+//        if (light.infinity){
+//            Vector3D U = A-B;
+//            Vector3D V = A-C;
+//            Vector3D W = Vector3D::cross(U,V);
+//            Vector3D L = -light.direction;
+//            L.normalise();
+//            W.normalise();
+//            double cosinus = (W.x*L.x + W.y*L.y + W.z*L.z);
+//            if (cosinus >= 0) {
+//                Color newColor = light.diffuseLight * diffuseReflection * cosinus;
+//                baseColor += newColor;
+//            }
+//        }
+//    }
+
+    for(int y = Ymin; y <= Ymax; y++){
+        double XL = std::numeric_limits<double>::infinity();
+        double XR = -std::numeric_limits<double>::infinity();
+        for(Line2D& l: lines){
+            double X;
+            try{
+                X = l.getX(y);
+                XL = std::min(XL, X);
+                XR = std::max(XR, X);
+            }catch(std::exception& e){
+
+            }
+        }
+        for(int x = round(XL+0.5); x <= round(XR-0.5); x++){
+            double ZGinverse = 1/(3*A.z) + 1/(3*B.z) + 1/(3*C.z);
+            double XG = (newA.x+newB.x+newC.x)/3;
+            double YG = (newA.y+newB.y+newC.y)/3;
+
+            Vector3D U = B-A;
+            Vector3D V = C-A;
+            Vector3D W = Vector3D::cross(U,V);
+            double k = W.x*A.x+W.y*A.y+W.z*A.z;
+
+            double dzdx = W.x/(-d*k);
+            double dzdy = W.y/(-d*k);
+
+            double Zinverse = ZGinverse + (x-XG)*dzdx + (y-YG)*dzdy;
+//            Color localColor;
+//            for(Light& light: lights){
+//                W.normalise();
+//                Point2D oldPoint = Point2D(x,y);
+//                oldPoint.x -= dx;
+//                oldPoint.y -= dy;
+//                oldPoint.x /= d;
+//                oldPoint.y /= d;
+//                double z = 1/Zinverse;
+//                oldPoint.x *= -z;
+//                oldPoint.y *= -z;
+//                Vector3D point = Vector3D::point(oldPoint.x, oldPoint.y, z);
+//                if (!light.infinity){
+//                    if (light.shadowmask.size() != 0) {
+//                        Vector3D originalPoint = point * Matrix::inv(getEyeMatrix(eye));
+//                        Vector3D lightPoint =
+//                                originalPoint * getEyeMatrix(light.location * Matrix::inv(getEyeMatrix(eye)));
+//                        Point2D projectedPoint = doProjection(lightPoint, light.d);
+//                        projectedPoint.x += light.dx;
+//                        projectedPoint.y += light.dy;
+//                        double Ax = projectedPoint.x - std::floor(projectedPoint.x);
+//                        double Ay = projectedPoint.y - std::floor(projectedPoint.y);
+//                        double ZeInverse = (1 - Ax) * light.shadowmask[std::floor(projectedPoint.y)][std::floor(projectedPoint.x)] +
+//                                           Ax * light.shadowmask[std::floor(projectedPoint.y)][std::ceil(projectedPoint.x)];
+//                        double ZfInverse = (1 - Ax) * light.shadowmask[std::ceil(projectedPoint.y)][std::floor(projectedPoint.x)] +
+//                                           Ax * light.shadowmask[std::ceil(projectedPoint.y)][std::ceil(projectedPoint.x)];
+//                        double Zestimate = (1 - Ay) * ZeInverse + Ay * ZfInverse;
+//
+////                    std::cerr << Zestimate << ' ' << light.shadowmask[projectedPoint.y][projectedPoint.x] << std::endl;
+//
+//                        if (not(std::abs(Zestimate - 1/lightPoint.z) < 0.0001)) {
+//                            continue;
+//                        }
+//                    }
+//
+//                    Vector3D L = light.location - point;
+//                    L.normalise();
+//                    double cosinusA = (W.x*L.x + W.y*L.y + W.z*L.z);
+//                    if (cosinusA >= 0) {
+//                        localColor += light.diffuseLight * diffuseReflection * cosinusA;
+//                        Vector3D R = 2*cosinusA*W - L;
+//                        R.normalise();
+//                        Vector3D vec = Vector3D::point(0,0,0) - point; //{0,0,0} is eyepoint in eyepoint transformation!
+//                        vec.normalise();
+//                        double cosinusB = (R.x*vec.x + R.y*vec.y + R.z*vec.z);
+//                        if (cosinusB >= 0) {
+//                            localColor += light.specularLight * specularReflection * std::pow(cosinusB, reflectionCoefficient);
+//                        }
+//                    }
+//                }
+//                else{
+//                    Vector3D L = -light.direction;
+//                    L.normalise();
+//                    double cosinusA = (W.x*L.x + W.y*L.y + W.z*L.z);
+//                    if (cosinusA >= 0){
+//                        Vector3D R = 2*cosinusA*W - L;
+//                        R.normalise();
+//                        Vector3D vec = Vector3D::point(0,0,0) - point;
+//                        vec.normalise();
+//                        double cosinusB = (R.x*vec.x + R.y*vec.y + R.z*vec.z);
+//                        if (cosinusB >= 0) {
+//                            localColor += light.specularLight * specularReflection * std::pow(cosinusB, reflectionCoefficient);
+//                        }
+//                    }
+//                }
+//            }
+            if (buf[y][x] >= Zinverse){
+                buf[y][x] = Zinverse;
+//                Color color = baseColor + localColor;
+//                image(x,y) = color.toRGB();
+                triangles[y][x] = triangleNr;
+            }
+        }
+    }
+}
+
 bool operator==(const Face &face1, const Face &face2) {
     bool equal = face1.getPointIndices().size() == face2.getPointIndices().size();
     for(int i = 0; i < face1.getPointIndices().size(); i++){

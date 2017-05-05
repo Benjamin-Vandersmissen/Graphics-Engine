@@ -120,4 +120,8 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
                         double dy, Lights3D &lights, const Color &ambientReflection, const Color &diffuseReflection,
                         const Color &specularReflection, double reflectionCoefficient, Vector3D eye);
 
+void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d,
+                            double dx,
+                            double dy, std::vector<std::vector<int> > &triangles, unsigned int triangleNr);
+
 #endif //GRAPHICS_ENGINE_WIREFRAMEPARSER_H
