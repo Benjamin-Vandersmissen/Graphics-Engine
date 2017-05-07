@@ -137,7 +137,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
             tempfigures.push_back(this->parseMengerSponge(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         img::Color col = {0,0,0};
-        if (std::find(allTextures.begin(), allTextures.end(), texturePath) == allTextures.end()){
+        if (allTextures.find(texturePath) == allTextures.end()){
             try{
                 std::ifstream textureFile(texturePath);
                 img::EasyImage* newTexture = new img::EasyImage;
@@ -273,6 +273,8 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         double dx = (Imagex/2) - DCx;
         double dy = (Imagey/2) - DCy;
         std::vector<std::vector<int> > triangles = {};
+        Matrix invEyeMatrix = Matrix::inv(getEyeMatrix(eye));
+        applyTransformation(figures, invEyeMatrix);
         for(int i = 0; i < Imagey; i++){
             std::vector<int> row = {};
             for(int j = 0; j < Imagex; j++){
@@ -281,6 +283,11 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
             triangles.push_back(row);
         }
         int triangle = 0;
+        unsigned int rechthoeken = 0;
+        unsigned int i = 0;
+        std::map<unsigned int, unsigned int> trianglesToRectangles;
+        std::map<unsigned int, std::vector<Vector3D> > rectangleProperties;
+        std::map<unsigned int, img::EasyImage*> rectangleTextures;
         for(Figure3D& figure: figures){
             for(const Face& face : figure.getFaces()){
                 Vector3D A = figure[face[0]];
@@ -288,23 +295,88 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                 Vector3D C = figure[face[2]];
                 Vector3D AB = B-A;
                 Vector3D AC = C-A;
-                Vector3D normal = Vector3D::cross(AB, AC);
+                Vector3D normal = Vector3D::normalise(Vector3D::cross(AB, AC));
                 double a = normal.x;
                 double b = normal.y;
                 double c = normal.z;
                 double d = -(a*A.x + b*A.y+c*A.z);
-                std::cerr << a << "x + " << b << "y + "
+
+                Vector3D linksonder;
+                Vector3D linksboven;
+                Vector3D rechtsonder;
+
+                if (face.getPointIndices().size() <= 4){
+                    Vector3D loodrechte = Vector3D::cross(normal, figure[face[1]]-figure[face[0]]);
+                    linksonder = figure[face[0]];
+                    rechtsonder = figure[face[1]];
+                    linksboven = figure[face[0]]+loodrechte;
+                }
+                else if (face.getPointIndices().size() == 5){
+                    Vector3D v = figure[face[face.getPointIndices().size()-1]] - figure[face[0]];
+                    Vector3D loodrechte = Vector3D::cross(normal, v);
+//                    int i = std::find(figure.getFaces().begin(), figure.getFaces().end(), face);
+                    Vector3D center = figure.getCenter(i);
+
+                }
+                for(int j = 2; j < face.getPointIndices().size(); j++){ //met het trianguleren wordt een face met n hoekpunten opgesplitst in n-2 driehoeken
+                    trianglesToRectangles[i] = rechthoeken;
+                    i++;
+                }
+//                std::cerr << linksonder << ' ' << rechtsonder-linksonder << ' ' << linksboven - linksonder << std::endl;
+                rectangleProperties[rechthoeken] = {linksonder, rechtsonder-linksonder, linksboven-linksonder};
+                rectangleTextures[rechthoeken] = figure.texture;
+                rechthoeken ++;
             }
         }
+        applyTransformation(figures, eyeMatrix);
         for (Figure3D& figure: figures){
             triangulate(figure);
             for(const Face& face : figure.getFaces()){
                 Vector3D pointA = figure[face[0]];
                 Vector3D pointB = figure[face[1]];
                 Vector3D pointC = figure[face[2]];
-                draw_textured_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy, triangles
-                                       , triangle);
+                draw_textured_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy, triangles, triangle);
                 triangle++;
+            }
+        }
+        for(int i = 0; i < triangles.size(); i++){
+            for(int j = 0; j < triangles[i].size(); j++){
+                if (triangles[i][j] != -1){
+                    image(j,i) = img::Color(20*triangles[i][j], 20*triangles[i][j], 20*triangles[i][j]);
+                    std::vector<Vector3D> rectProperties = rectangleProperties[trianglesToRectangles[triangles[i][j]]];
+//                    std::cerr << "Triangle " << triangles[i][j] << " Rectangle " << trianglesToRectangles[triangles[i][j]] << std::endl;
+                    double z = 1/buffer[i][j];
+                    Vector3D oorspronkelijkPunt = Vector3D::point(-z*(j-dx)/d, -z*(i-dy)/d, z);
+                    oorspronkelijkPunt *= invEyeMatrix;
+//                    std::cerr << "OP:" << oorspronkelijkPunt << std::endl;
+                    Vector3D P = rectProperties[0];
+                    Vector3D a = rectProperties[1];
+                    Vector3D b = rectProperties[2];
+                    double u,v;
+                    if (std::abs(a.x*b.y-a.y*b.x) >= std::pow(10,-10)){
+                        double det = (a.x*b.y-a.y*b.x);
+                        u = (1/det)*((oorspronkelijkPunt.x-P.x)*b.y + (oorspronkelijkPunt.y-P.y)*(-b.x));
+                        v = (1/det)*((oorspronkelijkPunt.x-P.x)*(-a.y) + (oorspronkelijkPunt.y-P.y)*a.x);
+//                        std::cerr << "U1, V1: " << u << ' ' << v << std::endl;
+                    }
+                    if (std::abs(a.y*b.z-a.z*b.y) >= std::pow(10,-10)){
+                        u = (1/(a.y*b.z-a.z*b.y))*((oorspronkelijkPunt.y-P.y)*b.z + (oorspronkelijkPunt.z-P.z)*(-b.y));
+                        v = (1/(a.y*b.z-a.z*b.y))*((oorspronkelijkPunt.y-P.y)*(-a.z) + (oorspronkelijkPunt.z-P.z)*a.y);
+//                        std::cerr << "U2, V2: " << u << ' ' << v << std::endl;
+                    }
+                    if (std::abs(a.x*b.z-a.z*b.x) >= std::pow(10,-10)){
+                        u = (1/(a.x*b.z-a.z*b.x))*((oorspronkelijkPunt.x-P.x)*b.z + (oorspronkelijkPunt.z-P.z)*(-b.x));
+                        v = (1/(a.x*b.z-a.z*b.x))*((oorspronkelijkPunt.x-P.x)*(-a.z) + (oorspronkelijkPunt.z-P.z)*a.x);
+//                        std::cerr << "U3, V3: " << u << ' ' << v << std::endl;
+                    }
+//                    std::cerr << std::endl;
+//                    std::cerr << i << ' ' << image.get_width() << ' ' << j  << ' ' << image.get_height()<< std::endl;
+                    img::EasyImage texture = *rectangleTextures[trianglesToRectangles[triangles[i][j]]];
+                    std::cerr << v*texture.get_height() << ' ' << texture.get_height() << std::endl;
+                    image(j,i) = texture(u*texture.get_width(), v*texture.get_height());
+//                    Vector3D normal = Vector3D::cross(a,b);
+//                    std::cerr << normal.x*oorspronkelijkPunt.x+normal.y*oorspronkelijkPunt.y+normal.z*oorspronkelijkPunt.z << std::endl;
+                }
             }
         }
     }
