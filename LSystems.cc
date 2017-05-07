@@ -104,7 +104,7 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
                 if (lsystem.draw(c)){
                     points.push_back(point);
                     std::vector<int> indices = {points.size()-2, points.size()-1};
-                    faces.push_back(Face({indices}));
+                    faces.push_back(Face(indices));
                 }
             }
         }
