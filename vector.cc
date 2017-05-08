@@ -550,6 +550,6 @@ bool operator==(const Vector3D &arg1, const Vector3D &arg2) {
     return (arg1.x == arg2.x && arg1.y == arg2.y && arg1.z == arg2.z&& (arg1.is_vector() == arg2.is_vector()));
 }
 bool areAlmostEqual(Vector3D &vector1, Vector3D &vector2) {
-        double sigma = 0.0001;
+        double sigma = 0.00000001;
         return (std::abs(vector1.x-vector2.x) < sigma && std::abs(vector1.y-vector2.y) < sigma && std::abs(vector1.z-vector2.z) < sigma);
 }

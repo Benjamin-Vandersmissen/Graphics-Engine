@@ -146,6 +146,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
             }
             catch(std::exception& e){
                 std::cerr << "invalid texture: " << texturePath << std::endl;
+                std::cerr << e.what() << std::endl;
                 allTextures[texturePath] = NULL;
             }
         }
@@ -312,11 +313,20 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                     linksboven = figure[face[0]]+loodrechte;
                 }
                 else if (face.getPointIndices().size() == 5){
+                    //regelmatige vijfhoek alleen
                     Vector3D v = figure[face[face.getPointIndices().size()-1]] - figure[face[0]];
-                    Vector3D loodrechte = Vector3D::cross(normal, v);
-//                    int i = std::find(figure.getFaces().begin(), figure.getFaces().end(), face);
-                    Vector3D center = figure.getCenter(i);
-
+                    linksonder = figure[face[0]] - std::cos(18*M_PI/360)*v;
+                    rechtsonder = figure[face[0]] + (1+std::cos(18*M_PI/360))*v;
+                    Vector3D v2 = figure[face[1]] - linksonder;
+                    linksboven = linksonder + (1+std::cos(36*M_PI/360))*v2;
+                }
+                else if (face.getPointIndices().size() == 6){
+                    //regelmatige zeshoek alleen
+                    Vector3D v = figure[face[face.getPointIndices().size()-1]] - figure[face[0]];
+                    linksonder = figure[face[0]] - std::sin(60*M_PI/360)*v;
+                    rechtsonder = figure[face[0]] + (1 + std::sin(60*M_PI/360))*v;
+                    Vector3D v2 = figure[face[1]] - linksonder;
+                    linksboven  = linksonder + 2*v2;
                 }
                 for(int j = 2; j < face.getPointIndices().size(); j++){ //met het trianguleren wordt een face met n hoekpunten opgesplitst in n-2 driehoeken
                     trianglesToRectangles[i] = rechthoeken;
@@ -342,8 +352,8 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         for(int i = 0; i < triangles.size(); i++){
             for(int j = 0; j < triangles[i].size(); j++){
                 if (triangles[i][j] != -1){
-                    image(j,i) = img::Color(20*triangles[i][j], 20*triangles[i][j], 20*triangles[i][j]);
-                    std::vector<Vector3D> rectProperties = rectangleProperties[trianglesToRectangles[triangles[i][j]]];
+                    unsigned int rectangle = trianglesToRectangles[triangles[i][j]];
+                    std::vector<Vector3D> rectProperties = rectangleProperties[rectangle];
 //                    std::cerr << "Triangle " << triangles[i][j] << " Rectangle " << trianglesToRectangles[triangles[i][j]] << std::endl;
                     double z = 1/buffer[i][j];
                     Vector3D oorspronkelijkPunt = Vector3D::point(-z*(j-dx)/d, -z*(i-dy)/d, z);
@@ -371,8 +381,8 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                     }
 //                    std::cerr << std::endl;
 //                    std::cerr << i << ' ' << image.get_width() << ' ' << j  << ' ' << image.get_height()<< std::endl;
-                    img::EasyImage texture = *rectangleTextures[trianglesToRectangles[triangles[i][j]]];
-                    std::cerr << v*texture.get_height() << ' ' << texture.get_height() << std::endl;
+                    img::EasyImage texture = *rectangleTextures[rectangle];
+//                    std::cerr << v*texture.get_height() << ' ' << texture.get_height() << std::endl;
                     image(j,i) = texture(u*texture.get_width(), v*texture.get_height());
 //                    Vector3D normal = Vector3D::cross(a,b);
 //                    std::cerr << normal.x*oorspronkelijkPunt.x+normal.y*oorspronkelijkPunt.y+normal.z*oorspronkelijkPunt.z << std::endl;
