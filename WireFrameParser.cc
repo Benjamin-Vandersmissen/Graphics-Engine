@@ -573,6 +573,10 @@ WireFrameParser::parse3DLsystem(const ini::Configuration &configuration, std::st
     std::string filename = configuration[name]["inputfile"].as_string_or_die();
     LParser::LSystem3D Lsystem = getLSystem3D(filename);
     Figure3D figure = drawLSystem3D(Lsystem, color);
+    figure.setAmbientReflection(ambientReflection);
+    figure.setDiffuseReflection(diffuseReflection);
+    figure.setReflectionCoefficient(reflectionCoefficient);
+    figure.setSpecularReflection(specularReflection);
     return figure;
 }
 
