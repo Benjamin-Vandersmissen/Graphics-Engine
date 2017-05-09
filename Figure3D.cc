@@ -464,9 +464,8 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
 }
 
 
-void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d,
-                            double dx,
-                            double dy, std::vector<std::vector<int> > &triangles, unsigned int triangleNr) {
+void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d, double dx,
+                            double dy, std::vector<Vector3D> rectangleProperties, img::EasyImage *texture, Vector3D eye) {
 
     Point2D newA = doProjection(A, d);
     newA.x += dx;
@@ -487,10 +486,6 @@ void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Ve
     Line2D AC = {newA,newC, img::Color()};
     Line2D BC = {newB,newC, img::Color()};
     Lines2D lines = {AB,AC,BC};
-
-//    color1.blue = std::rand()%100 + 25;
-//    color1.red = std::rand()%100 + 25;
-//    color1.green = std::rand()%100 + 25;
 
 //    Color baseColor;
 //    for(Light& light: lights){
@@ -537,21 +532,21 @@ void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Ve
             double dzdy = W.y/(-d*k);
 
             double Zinverse = ZGinverse + (x-XG)*dzdx + (y-YG)*dzdy;
+            Point2D oldPoint = Point2D(x,y);
+            oldPoint.x -= dx;
+            oldPoint.y -= dy;
+            oldPoint.x /= d;
+            oldPoint.y /= d;
+            double z = 1/Zinverse;
+            oldPoint.x *= -z;
+            oldPoint.y *= -z;
+            Vector3D point = Vector3D::point(oldPoint.x, oldPoint.y, z);
+            Vector3D originalPoint = point * Matrix::inv(getEyeMatrix(eye));
 //            Color localColor;
 //            for(Light& light: lights){
 //                W.normalise();
-//                Point2D oldPoint = Point2D(x,y);
-//                oldPoint.x -= dx;
-//                oldPoint.y -= dy;
-//                oldPoint.x /= d;
-//                oldPoint.y /= d;
-//                double z = 1/Zinverse;
-//                oldPoint.x *= -z;
-//                oldPoint.y *= -z;
-//                Vector3D point = Vector3D::point(oldPoint.x, oldPoint.y, z);
 //                if (!light.infinity){
 //                    if (light.shadowmask.size() != 0) {
-//                        Vector3D originalPoint = point * Matrix::inv(getEyeMatrix(eye));
 //                        Vector3D lightPoint =
 //                                originalPoint * getEyeMatrix(light.location * Matrix::inv(getEyeMatrix(eye)));
 //                        Point2D projectedPoint = doProjection(lightPoint, light.d);
@@ -605,9 +600,29 @@ void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Ve
 //            }
             if (buf[y][x] >= Zinverse){
                 buf[y][x] = Zinverse;
+                Vector3D P = rectangleProperties[0];
+                Vector3D a = rectangleProperties[1];
+                Vector3D b = rectangleProperties[2];
+                double u,v;
+                if (std::abs(a.x*b.y-a.y*b.x) >= std::pow(10,-10)){
+                    double det = (a.x*b.y-a.y*b.x);
+                    u = (1/det)*((originalPoint.x-P.x)*b.y + (originalPoint.y-P.y)*(-b.x));
+                    v = (1/det)*((originalPoint.x-P.x)*(-a.y) + (originalPoint.y-P.y)*a.x);
+//                        std::cerr << "U1, V1: " << u << ' ' << v << std::endl;
+                }
+                if (std::abs(a.y*b.z-a.z*b.y) >= std::pow(10,-10)){
+                    u = (1/(a.y*b.z-a.z*b.y))*((originalPoint.y-P.y)*b.z + (originalPoint.z-P.z)*(-b.y));
+                    v = (1/(a.y*b.z-a.z*b.y))*((originalPoint.y-P.y)*(-a.z) + (originalPoint.z-P.z)*a.y);
+//                        std::cerr << "U2, V2: " << u << ' ' << v << std::endl;
+                }
+                if (std::abs(a.x*b.z-a.z*b.x) >= std::pow(10,-10)){
+                    u = (1/(a.x*b.z-a.z*b.x))*((originalPoint.x-P.x)*b.z + (originalPoint.z-P.z)*(-b.x));
+                    v = (1/(a.x*b.z-a.z*b.x))*((originalPoint.x-P.x)*(-a.z) + (originalPoint.z-P.z)*a.x);
+//                        std::cerr << "U3, V3: " << u << ' ' << v << std::endl;
+                }
+                std::cerr << u << ' ' << v << std::endl;
 //                Color color = baseColor + localColor;
-//                image(x,y) = color.toRGB();
-                triangles[y][x] = triangleNr;
+                image(x,y) = texture->operator()(u*texture->get_width(), v*texture->get_height());
             }
         }
     }

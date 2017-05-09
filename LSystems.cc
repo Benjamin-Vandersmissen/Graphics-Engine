@@ -102,6 +102,12 @@ void LSystem3Dstep(LParser::LSystem3D &lsystem, std::vector<Face> &faces, Vector
             else{
                 point += H;
                 if (lsystem.draw(c)){
+                    if (points.size() > 2){
+                        if (areAlmostEqual(H, points.back()-points[points.size()-2])){
+                            points.erase(points.begin() + points.size()-1);
+                            faces.erase(faces.begin() + faces.size()-1);
+                        }
+                    }
                     points.push_back(point);
                     std::vector<int> indices = {points.size()-2, points.size()-1};
                     faces.push_back(Face(indices));
