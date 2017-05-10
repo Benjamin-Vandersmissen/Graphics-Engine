@@ -325,97 +325,97 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
 
                 rechthoek = rechthoeken;
                 //TODO: code implementeren die verschillende faces met hetzelfde vlak van een figuur dezelfde rechthoek toewijst
-//                for(int j = 0; j <rectangleProperties.size();j++){
-//                    Vector3D P2 = rectangleProperties[j][0];
-//                    Vector3D A2 = rectangleProperties[j][1];
-//                    Vector3D B2 = rectangleProperties[j][2];
-//                    Vector3D normal1 = Vector3D::cross(P2+A2, P2+B2);
-//                    normal1.normalise();
-//                    double a2,b2,c2,d2;
-//                    a2 = normal.x;
-//                    b2 = normal.y;
-//                    c2 = normal.z;
-//                    d2 = -(a2*P2.x+b2*P2.y+c2*P2.z);
-//                    if (std::abs(a2-a1) <= std::pow(10,-10) && std::abs(b1-b2) <= std::pow(10,-10) && std::abs(c1-c2) <= std::pow(10,-10) && std::abs(d1-d2) <= std::pow(10,-10)){
-//                        Vector3D P1 = linksonder;
-//                        Vector3D A1 = rechtsonder - linksonder;
-//                        Vector3D B1 = linksboven - linksonder;
-//                        Vector3D P3 = P2+A2;
-//                        Vector3D P4 = P2+B2;
-//                        double u1,v1,u2,v2,u3,v3;
-//                        if (std::abs(A1.x*B1.y-A1.y*B1.x) >= std::pow(10,-10)){
-//                            double det = (A1.x*B1.y-A1.y*B1.x);
-//                            u1 = (1/det)*((P2.x-P1.x)*B1.y + (P2.y-P1.y)*(-B1.x));
-//                            v1 = (1/det)*((P2.x-P1.x)*(-A1.y) + (P2.y-P1.y)*A1.x);
-//                            u2 = (1/det)*((P3.x-P1.x)*B1.y + (P3.y-P1.y)*(-B1.x));
-//                            v2 = (1/det)*((P3.x-P1.x)*(-A1.y) + (P3.y-P1.y)*A1.x);
-//                            u3 = (1/det)*((P4.x-P1.x)*B1.y + (P4.y-P1.y)*(-B1.x));
-//                            v3 = (1/det)*((P4.x-P1.x)*(-A1.y) + (P4.y-P1.y)*A1.x);
-////                        std::cerr << "U1, V1: " << u << ' ' << v << std::endl;
-//                        }
-//                        if (std::abs(A1.y*B1.z-A1.z*B1.y) >= std::pow(10,-10)){
-//                            u1 = (1/(A1.y*B1.z-A1.z*B1.y))*((P2.y-P1.y)*B1.z + (P2.z-P1.z)*(-B1.y));
-//                            v1 = (1/(A1.y*B1.z-A1.z*B1.y))*((P2.y-P1.y)*(-A1.z) + (P2.z-P1.z)*A1.y);
-//                            u2 = (1/(A1.y*B1.z-A1.z*B1.y))*((P3.y-P1.y)*B1.z + (P3.z-P1.z)*(-B1.y));
-//                            v2 = (1/(A1.y*B1.z-A1.z*B1.y))*((P3.y-P1.y)*(-A1.z) + (P3.z-P1.z)*A1.y);
-//                            u3 = (1/(A1.y*B1.z-A1.z*B1.y))*((P4.y-P1.y)*B1.z + (P4.z-P1.z)*(-B1.y));
-//                            v3 = (1/(A1.y*B1.z-A1.z*B1.y))*((P4.y-P1.y)*(-A1.z) + (P4.z-P1.z)*A1.y);
-////                        std::cerr << "U2, V2: " << u << ' ' << v << std::endl;
-//                        }
-//                        if (std::abs(A1.x*B1.z-A1.z*B1.x) >= std::pow(10,-10)){
-//                            u1 = (1/(A1.x*B1.z-A1.z*B1.x))*((P2.x-P1.x)*B1.z + (P2.z-P1.z)*(-B1.x));
-//                            v1 = (1/(A1.x*B1.z-A1.z*B1.x))*((P2.x-P1.x)*(-A1.z) + (P2.z-P1.z)*A1.x);
-//                            u2 = (1/(A1.x*B1.z-A1.z*B1.x))*((P3.x-P1.x)*B1.z + (P3.z-P1.z)*(-B1.x));
-//                            v2 = (1/(A1.x*B1.z-A1.z*B1.x))*((P3.x-P1.x)*(-A1.z) + (P3.z-P1.z)*A1.x);
-//                            u3 = (1/(A1.x*B1.z-A1.z*B1.x))*((P4.x-P1.x)*B1.z + (P4.z-P1.z)*(-B1.x));
-//                            v3 = (1/(A1.x*B1.z-A1.z*B1.x))*((P4.x-P1.x)*(-A1.z) + (P4.z-P1.z)*A1.x);
-////                        std::cerr << "U3, V3: " << u << ' ' << v << std::endl;
-//                        }
-//
+                for(int j = 0; j <rectangleProperties.size();j++){
+                    Vector3D P2 = rectangleProperties[j][0];
+                    Vector3D A2 = rectangleProperties[j][1];
+                    Vector3D B2 = rectangleProperties[j][2];
+                    Vector3D normal1 = Vector3D::cross(P2+A2, P2+B2);
+                    normal1.normalise();
+                    double a2,b2,c2,d2;
+                    a2 = normal.x;
+                    b2 = normal.y;
+                    c2 = normal.z;
+                    d2 = -(a2*P2.x+b2*P2.y+c2*P2.z);
+                    if (std::abs(a2-a1) <= std::pow(10,-10) && std::abs(b1-b2) <= std::pow(10,-10) && std::abs(c1-c2) <= std::pow(10,-10) && std::abs(d1-d2) <= std::pow(10,-10)){
+                        Vector3D P1 = linksonder;
+                        Vector3D A1 = rechtsonder - linksonder;
+                        Vector3D B1 = linksboven - linksonder;
+                        Vector3D P3 = P2+A2;
+                        Vector3D P4 = P2+B2;
+                        double u1,v1,u2,v2,u3,v3;
+                        if (std::abs(A1.x*B1.y-A1.y*B1.x) >= std::pow(10,-10)){
+                            double det = (A1.x*B1.y-A1.y*B1.x);
+                            u1 = (1/det)*((P2.x-P1.x)*B1.y + (P2.y-P1.y)*(-B1.x));
+                            v1 = (1/det)*((P2.x-P1.x)*(-A1.y) + (P2.y-P1.y)*A1.x);
+                            u2 = (1/det)*((P3.x-P1.x)*B1.y + (P3.y-P1.y)*(-B1.x));
+                            v2 = (1/det)*((P3.x-P1.x)*(-A1.y) + (P3.y-P1.y)*A1.x);
+                            u3 = (1/det)*((P4.x-P1.x)*B1.y + (P4.y-P1.y)*(-B1.x));
+                            v3 = (1/det)*((P4.x-P1.x)*(-A1.y) + (P4.y-P1.y)*A1.x);
+//                        std::cerr << "U1, V1: " << u << ' ' << v << std::endl;
+                        }
+                        if (std::abs(A1.y*B1.z-A1.z*B1.y) >= std::pow(10,-10)){
+                            u1 = (1/(A1.y*B1.z-A1.z*B1.y))*((P2.y-P1.y)*B1.z + (P2.z-P1.z)*(-B1.y));
+                            v1 = (1/(A1.y*B1.z-A1.z*B1.y))*((P2.y-P1.y)*(-A1.z) + (P2.z-P1.z)*A1.y);
+                            u2 = (1/(A1.y*B1.z-A1.z*B1.y))*((P3.y-P1.y)*B1.z + (P3.z-P1.z)*(-B1.y));
+                            v2 = (1/(A1.y*B1.z-A1.z*B1.y))*((P3.y-P1.y)*(-A1.z) + (P3.z-P1.z)*A1.y);
+                            u3 = (1/(A1.y*B1.z-A1.z*B1.y))*((P4.y-P1.y)*B1.z + (P4.z-P1.z)*(-B1.y));
+                            v3 = (1/(A1.y*B1.z-A1.z*B1.y))*((P4.y-P1.y)*(-A1.z) + (P4.z-P1.z)*A1.y);
+//                        std::cerr << "U2, V2: " << u << ' ' << v << std::endl;
+                        }
+                        if (std::abs(A1.x*B1.z-A1.z*B1.x) >= std::pow(10,-10)){
+                            u1 = (1/(A1.x*B1.z-A1.z*B1.x))*((P2.x-P1.x)*B1.z + (P2.z-P1.z)*(-B1.x));
+                            v1 = (1/(A1.x*B1.z-A1.z*B1.x))*((P2.x-P1.x)*(-A1.z) + (P2.z-P1.z)*A1.x);
+                            u2 = (1/(A1.x*B1.z-A1.z*B1.x))*((P3.x-P1.x)*B1.z + (P3.z-P1.z)*(-B1.x));
+                            v2 = (1/(A1.x*B1.z-A1.z*B1.x))*((P3.x-P1.x)*(-A1.z) + (P3.z-P1.z)*A1.x);
+                            u3 = (1/(A1.x*B1.z-A1.z*B1.x))*((P4.x-P1.x)*B1.z + (P4.z-P1.z)*(-B1.x));
+                            v3 = (1/(A1.x*B1.z-A1.z*B1.x))*((P4.x-P1.x)*(-A1.z) + (P4.z-P1.z)*A1.x);
+//                        std::cerr << "U3, V3: " << u << ' ' << v << std::endl;
+                        }
+
 //                        std::cerr << rectangleProperties[j][0] << std::endl;
 //                        std::cerr << rectangleProperties[j][1] << std::endl;
 //                        std::cerr << rectangleProperties[j][2] << std::endl;
-//                        if (u1 < 0 && v1 < 0){
-//                            rectangleProperties[j][0] = P1+ u1*A1 +v1*B1;
-//                        }
-//                        else if (u1 > 0 && v1 < 0){
-//                            rectangleProperties[j][0] = P1  + v1*B1;
-//                        }
-//                        else if (u1 < 0 && v1 >0){
-//                            rectangleProperties[j][0] = P1 + u1*A1 ;
-//                        }
-//                        if (u2 > 1) {
-//                            if (v2 > 0)
-//                                rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
-//                            else
-//                                rectangleProperties[j][1] = (P1 + u2*A1 +v2*B1) - rectangleProperties[j][0];
-//                        }
-//                        else {
-//                            if (v2 >0)
-//                                rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
-//                            else
-//                                rectangleProperties[j][1] = (P1 + A1 + v2*B1) - rectangleProperties[j][0];
-//                        }
-//                        if (v3 > 1){
-//                            if (u3 > 0)
-//                                rectangleProperties[j][2] = (P1 + v3 * B1) - rectangleProperties[j][0];
-//                            else
-//                                rectangleProperties[j][2] = (P1 + u3 * A1 + v3 * B1) - rectangleProperties[j][0];
-//                        }
-//                        else{
-//                            if (u3 > 0)
-//                                rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
-//                            else
-//                                rectangleProperties[j][2] = (P1 + u3*A1 + B1) - rectangleProperties[j][0];
-//                        }
-//                        std::cerr << rectangleProperties[j][0] << ' ' << P1 << std::endl;
-//                        std::cerr << rectangleProperties[j][1] << ' ' << A1 << std::endl;
-//                        std::cerr << rectangleProperties[j][2] << ' ' << B1 << std::endl;
-//                        rechthoek = j;
-//                        break;
-//
-//                    }
-//                }
+                        if (u1 < 0 && v1 < 0){
+                            rectangleProperties[j][0] = P1+ u1*A1 +v1*B1;
+                        }
+                        else if (u1 > 0 && v1 < 0){
+                            rectangleProperties[j][0] = P1  + v1*B1;
+                        }
+                        else if (u1 < 0 && v1 >0){
+                            rectangleProperties[j][0] = P1 + u1*A1 ;
+                        }
+                        if (u2 > 1) {
+                            if (v2 > 0)
+                                rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
+                            else
+                                rectangleProperties[j][1] = (P1 + u2*A1 +v2*B1) - rectangleProperties[j][0];
+                        }
+                        else {
+                            if (v2 >0)
+                                rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
+                            else
+                                rectangleProperties[j][1] = (P1 + A1 + v2*B1) - rectangleProperties[j][0];
+                        }
+                        if (v3 > 1){
+                            if (u3 > 0)
+                                rectangleProperties[j][2] = (P1 + v3 * B1) - rectangleProperties[j][0];
+                            else
+                                rectangleProperties[j][2] = (P1 + u3 * A1 + v3 * B1) - rectangleProperties[j][0];
+                        }
+                        else{
+                            if (u3 > 0)
+                                rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
+                            else
+                                rectangleProperties[j][2] = (P1 + u3*A1 + B1) - rectangleProperties[j][0];
+                        }
+                        std::cerr << rectangleProperties[j][0] << ' ' << P1 << std::endl;
+                        std::cerr << rectangleProperties[j][1] << ' ' << A1 << std::endl;
+                        std::cerr << rectangleProperties[j][2] << ' ' << B1 << std::endl;
+                        rechthoek = j;
+                        break;
+
+                    }
+                }
                 for(int j = 2; j < face.getPointIndices().size(); j++){ //met het trianguleren wordt een face met n hoekpunten opgesplitst in n-2 driehoeken
                     trianglesToRectangles[i] = rechthoek;
                     i++;
