@@ -73,7 +73,7 @@ int main(int argc, char const* argv[])
                                 retVal = 1;
                                 continue;
                         }
-
+//                        std::cout << "Working on " << argv[i] << std::endl;
                         img::EasyImage image = generate_image(conf);
                         if(image.get_height() > 0 && image.get_width() > 0)
                         {

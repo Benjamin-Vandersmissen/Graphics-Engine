@@ -60,7 +60,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         Color ambientReflection = configuration[name.c_str()]["ambientReflection"].as_double_tuple_or_default(configuration[name.c_str()]["color"].as_double_tuple_or_default({0,0,0}));
         Color diffuseReflection = configuration[name.c_str()]["diffuseReflection"].as_double_tuple_or_default({0,0,0});
         Color specularReflection = configuration[name.c_str()]["specularReflection"].as_double_tuple_or_default({0,0,0});
-        img::Color color = extractColor(configuration[name.c_str()]["color"].as_double_tuple_or_die());
+        img::Color color = extractColor(configuration[name.c_str()]["color"].as_double_tuple_or_default({0,0,0}));
         double reflectionCoefficient = configuration[name.c_str()]["reflectionCoefficient"].as_double_or_default(0);
         bool rainbow = configuration[name.c_str()]["rainbow"].as_bool_or_default(false);
         std::string texturePath = configuration[name.c_str()]["texturePath"].as_string_or_default("");
