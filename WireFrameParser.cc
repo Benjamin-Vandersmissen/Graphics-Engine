@@ -201,12 +201,14 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                 }
                 double Imagex = shadowmaskSize * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
                 double Imagey = shadowmaskSize * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+                std::cerr << "Ix: " << Imagex << std::endl << "Iy: " << Imagey << std::endl;
                 light.shadowmask = ZBuffer(Imagex, Imagey);
                 double d = 0.95 * (Imagex/(Xmax-Xmin));
                 double DCx = d * (Xmin+Xmax)/2;
                 double DCy = d * (Ymin+Ymax)/2;
                 double dx = (Imagex/2) - DCx;
                 double dy = (Imagey/2) - DCy;
+                std::cerr << "d: " << d << std::endl << "dx: " << dx << std::endl << "dy: " << dy << std::endl;
                 img::EasyImage garbageImage(Imagex, Imagey);
                 for (Figure3D& figure: figures){
                     triangulate(figure);
@@ -284,6 +286,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         std::map<unsigned int, std::vector<Vector3D> > rectangleProperties;
         std::map<unsigned int, img::EasyImage*> rectangleTextures;
         for(Figure3D& figure: figures){
+            unsigned int minimumRectangle = rectangleProperties.size(); //From which rectangle the program may try to optimise, by merging rectangles, by using this value, it will only optimise rectangles of the same figure
             for(Face face : figure.getFaces()){
                 unsigned int rechthoek = 0;
                 Vector3D A = figure[face[0]];
@@ -324,17 +327,16 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                 }
 
                 rechthoek = rechthoeken;
-                //TODO: code implementeren die verschillende faces met hetzelfde vlak van een figuur dezelfde rechthoek toewijst
-                for(int j = 0; j <rectangleProperties.size();j++){
+                for(int j = minimumRectangle; j <rectangleProperties.size();j++){
                     Vector3D P2 = rectangleProperties[j][0];
                     Vector3D A2 = rectangleProperties[j][1];
                     Vector3D B2 = rectangleProperties[j][2];
-                    Vector3D normal1 = Vector3D::cross(P2+A2, P2+B2);
+                    Vector3D normal1 = Vector3D::cross(A2, B2);
                     normal1.normalise();
                     double a2,b2,c2,d2;
-                    a2 = normal.x;
-                    b2 = normal.y;
-                    c2 = normal.z;
+                    a2 = normal1.x;
+                    b2 = normal1.y;
+                    c2 = normal1.z;
                     d2 = -(a2*P2.x+b2*P2.y+c2*P2.z);
                     if (std::abs(a2-a1) <= std::pow(10,-10) && std::abs(b1-b2) <= std::pow(10,-10) && std::abs(c1-c2) <= std::pow(10,-10) && std::abs(d1-d2) <= std::pow(10,-10)){
                         Vector3D P1 = linksonder;
@@ -376,41 +378,66 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
 //                        std::cerr << rectangleProperties[j][1] << std::endl;
 //                        std::cerr << rectangleProperties[j][2] << std::endl;
                         if (u1 < 0 && v1 < 0){
-                            rectangleProperties[j][0] = P1+ u1*A1 +v1*B1;
-                        }
-                        else if (u1 > 0 && v1 < 0){
-                            rectangleProperties[j][0] = P1  + v1*B1;
-                        }
-                        else if (u1 < 0 && v1 >0){
-                            rectangleProperties[j][0] = P1 + u1*A1 ;
-                        }
-                        if (u2 > 1) {
-                            if (v2 > 0)
-                                rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
-                            else
-                                rectangleProperties[j][1] = (P1 + u2*A1 +v2*B1) - rectangleProperties[j][0];
-                        }
-                        else {
-                            if (v2 >0)
-                                rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
-                            else
+                            rectangleProperties[j][0] = P2;
+                            if (u2 > 1) {
+                                rectangleProperties[j][1] = (P1 + u2 * A1 + v2*B1) - rectangleProperties[j][0];
+                            }
+                            else{
                                 rectangleProperties[j][1] = (P1 + A1 + v2*B1) - rectangleProperties[j][0];
-                        }
-                        if (v3 > 1){
-                            if (u3 > 0)
-                                rectangleProperties[j][2] = (P1 + v3 * B1) - rectangleProperties[j][0];
-                            else
-                                rectangleProperties[j][2] = (P1 + u3 * A1 + v3 * B1) - rectangleProperties[j][0];
-                        }
-                        else{
-                            if (u3 > 0)
-                                rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
-                            else
+                            }
+                            if (v3 > 1){
+                                rectangleProperties[j][2] = (P1 + u3*A1 + v3*B1) - rectangleProperties[j][0];
+                            }
+                            else{
                                 rectangleProperties[j][2] = (P1 + u3*A1 + B1) - rectangleProperties[j][0];
+                            }
                         }
-                        std::cerr << rectangleProperties[j][0] << ' ' << P1 << std::endl;
-                        std::cerr << rectangleProperties[j][1] << ' ' << A1 << std::endl;
-                        std::cerr << rectangleProperties[j][2] << ' ' << B1 << std::endl;
+                        else if (u1 >= 0 && v1 < 0){
+                            rectangleProperties[j][0] = P1  + v1*B1;
+                            if (u2 > 1) {
+                                rectangleProperties[j][1] = (P1 + u2 * A1 + v2*B1) - rectangleProperties[j][0];
+                            }
+                            else{
+                                rectangleProperties[j][1] = (P1 + A1 + v2*B1) - rectangleProperties[j][0];
+                            }
+                            if (v3 > 1){
+                                rectangleProperties[j][2] = (P1 + v3*B1) - rectangleProperties[j][0];
+                            }
+                            else{
+                                rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
+                            }
+                        }
+                        else if (u1 < 0 && v1 >= 0){
+                            rectangleProperties[j][0] = P1 + u1*A1 ;
+                            if (u2 > 1) {
+                                rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
+                            }
+                            else{
+                                rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
+                            }
+                            if (v3 > 1){
+                                rectangleProperties[j][2] = (P1 + u3*A1 + v3*B1) - rectangleProperties[j][0];
+                            }
+                            else{
+                                rectangleProperties[j][2] = (P1 + u3*A1 + B1) - rectangleProperties[j][0];
+                            }
+                        }
+                        else if (u1 >= 0 && v1 >= 0){
+                            rectangleProperties[j][0] = P1;
+                            if (u2 > 1) {
+                                rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
+                            }
+                            else{
+                                rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
+                            }
+                            if (v3 > 1){
+                                rectangleProperties[j][2] = (P1 + v3*B1) - rectangleProperties[j][0];
+                            }
+                            else{
+                                rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
+                            }
+                        }
+
                         rechthoek = j;
                         break;
 

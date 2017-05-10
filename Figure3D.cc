@@ -620,8 +620,7 @@ void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Ve
                     v = (1/(a.x*b.z-a.z*b.x))*((originalPoint.x-P.x)*(-a.z) + (originalPoint.z-P.z)*a.x);
 //                        std::cerr << "U3, V3: " << u << ' ' << v << std::endl;
                 }
-                std::cerr << u << ' ' << v << std::endl;
-//                Color color = baseColor + localColor;
+ //                Color color = baseColor + localColor;
                 image(x,y) = texture->operator()(u*texture->get_width(), v*texture->get_height());
             }
         }
