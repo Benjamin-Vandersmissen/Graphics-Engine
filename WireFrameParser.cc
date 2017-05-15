@@ -1366,6 +1366,13 @@ WireFrameParser::parseThick(const ini::Configuration &configuration, std::string
         case 6:
             figure = this->parse3DLsystem(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
             break;
+        case 7 :
+            figure = this->parseLinedrawing(configuration, name);
+            figure.setAmbientReflection(ambientReflection);
+            figure.setDiffuseReflection(diffuseReflection);
+            figure.setSpecularReflection(specularReflection);
+            figure.setReflectionCoefficient(reflectionCoefficient);
+            break;
         default:
             std::cerr << "Unknown type: " << configuration[name]["type"].as_string_or_die() << std::endl;
             return {};
