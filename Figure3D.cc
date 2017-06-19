@@ -174,7 +174,7 @@ Point2D doProjection(const Vector3D &point, const double d) {
 }
 
 // Face class
-Face::Face(const std::vector<int> &pointIndices) : pointIndices(pointIndices) {}
+Face::Face(const std::vector<int> pointIndices) : pointIndices(pointIndices) {}
 
 Face::Face() {}
 
@@ -415,7 +415,6 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
                         double ZfInverse = (1 - Ax) * light.shadowmask[std::ceil(projectedPoint.y)][std::floor(projectedPoint.x)] +
                                            Ax * light.shadowmask[std::ceil(projectedPoint.y)][std::ceil(projectedPoint.x)];
                         double Zestimate = (1 - Ay) * ZeInverse + Ay * ZfInverse;
-
 //                    std::cerr << Zestimate << ' ' << light.shadowmask[projectedPoint.y][projectedPoint.x] << std::endl;
 
                         if (not(std::abs(Zestimate - 1/lightPoint.z) < 0.0001)) {
@@ -465,7 +464,8 @@ void draw_zbuf_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector
 
 
 void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Vector3D &B, Vector3D &C, double d, double dx,
-                            double dy, std::vector<Vector3D> rectangleProperties, img::EasyImage *texture, Vector3D eye) {
+                            double dy, std::vector<Vector3D> rectangleProperties, img::EasyImage *texture, Vector3D eye,
+                            bool wrapTexture) {
 
     Point2D newA = doProjection(A, d);
     newA.x += dx;
@@ -560,7 +560,6 @@ void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Ve
 //                                           Ax * light.shadowmask[std::ceil(projectedPoint.y)][std::ceil(projectedPoint.x)];
 //                        double Zestimate = (1 - Ay) * ZeInverse + Ay * ZfInverse;
 //
-////                    std::cerr << Zestimate << ' ' << light.shadowmask[projectedPoint.y][projectedPoint.x] << std::endl;
 //
 //                        if (not(std::abs(Zestimate - 1/lightPoint.z) < 0.0001)) {
 //                            continue;
@@ -604,24 +603,49 @@ void draw_textured_triangle(ZBuffer &buf, img::EasyImage &image, Vector3D &A, Ve
                 Vector3D a = rectangleProperties[1];
                 Vector3D b = rectangleProperties[2];
                 double u,v;
-                if (std::abs(a.x*b.y-a.y*b.x) >= std::pow(10,-10)){
-                    double det = (a.x*b.y-a.y*b.x);
-                    u = (1/det)*((originalPoint.x-P.x)*b.y + (originalPoint.y-P.y)*(-b.x));
-                    v = (1/det)*((originalPoint.x-P.x)*(-a.y) + (originalPoint.y-P.y)*a.x);
+                if (!wrapTexture) {
+                    if (std::abs(a.x * b.y - a.y * b.x) >= std::pow(10, -10)) {
+                        double det = (a.x * b.y - a.y * b.x);
+                        u = (1 / det) * ((originalPoint.x - P.x) * b.y + (originalPoint.y - P.y) * (-b.x));
+                        v = (1 / det) * ((originalPoint.x - P.x) * (-a.y) + (originalPoint.y - P.y) * a.x);
 //                        std::cerr << "U1, V1: " << u << ' ' << v << std::endl;
-                }
-                if (std::abs(a.y*b.z-a.z*b.y) >= std::pow(10,-10)){
-                    u = (1/(a.y*b.z-a.z*b.y))*((originalPoint.y-P.y)*b.z + (originalPoint.z-P.z)*(-b.y));
-                    v = (1/(a.y*b.z-a.z*b.y))*((originalPoint.y-P.y)*(-a.z) + (originalPoint.z-P.z)*a.y);
+                    }
+                    if (std::abs(a.y * b.z - a.z * b.y) >= std::pow(10, -10)) {
+                        u = (1 / (a.y * b.z - a.z * b.y)) *
+                            ((originalPoint.y - P.y) * b.z + (originalPoint.z - P.z) * (-b.y));
+                        v = (1 / (a.y * b.z - a.z * b.y)) *
+                            ((originalPoint.y - P.y) * (-a.z) + (originalPoint.z - P.z) * a.y);
 //                        std::cerr << "U2, V2: " << u << ' ' << v << std::endl;
-                }
-                if (std::abs(a.x*b.z-a.z*b.x) >= std::pow(10,-10)){
-                    u = (1/(a.x*b.z-a.z*b.x))*((originalPoint.x-P.x)*b.z + (originalPoint.z-P.z)*(-b.x));
-                    v = (1/(a.x*b.z-a.z*b.x))*((originalPoint.x-P.x)*(-a.z) + (originalPoint.z-P.z)*a.x);
+                    }
+                    if (std::abs(a.x * b.z - a.z * b.x) >= std::pow(10, -10)) {
+                        u = (1 / (a.x * b.z - a.z * b.x)) *
+                            ((originalPoint.x - P.x) * b.z + (originalPoint.z - P.z) * (-b.x));
+                        v = (1 / (a.x * b.z - a.z * b.x)) *
+                            ((originalPoint.x - P.x) * (-a.z) + (originalPoint.z - P.z) * a.x);
 //                        std::cerr << "U3, V3: " << u << ' ' << v << std::endl;
+                    }
+                }
+                else{
+                    Vector3D c = rectangleProperties[3];
+                    Vector3D vec = Vector3D::vector(originalPoint.x - P.x, originalPoint.y - P.y, originalPoint.z - P.z);
+                    Matrix matrix;
+                    matrix(1,1) = a.x;
+                    matrix(1,2) = a.y;
+                    matrix(1,3) = a.z;
+                    matrix(2,1) = b.x;
+                    matrix(2,2) = b.y;
+                    matrix(2,3) = b.z;
+                    matrix(3,1) = c.x;
+                    matrix(3,2) = c.y;
+                    matrix(3,3) = c.z;
+                    matrix.inv();
+                    Vector3D result = vec*matrix;
+                    u = result.x;
+                    v = result.y;
                 }
  //                Color color = baseColor + localColor;
-                image(x,y) = texture->operator()(u*texture->get_width(), v*texture->get_height());
+                if ( u <= 1 && u  > 0 && v <= 1 && v > 0)
+                    image(x,y) = texture->operator()(u*(texture->get_width()-1), v*(texture->get_height()-1));
             }
         }
     }

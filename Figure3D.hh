@@ -28,7 +28,7 @@ public:
      *
      * \param pointIndices The indices to construct the Face from.
      * **/
-    Face(const std::vector<int> &pointIndices);
+    Face(const std::vector<int> pointIndices);
 
     /**
      * \brief Returns the pointIndices.
@@ -156,6 +156,8 @@ public:
      * \brief If the image needs to be drawn in rainbow coloring instead of it's normal color.
      * **/
     bool rainbow = false;
+
+    bool wrapAroundTexture = true;
 
     img::EasyImage* texture;
 

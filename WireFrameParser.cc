@@ -44,7 +44,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         lights.push_back(newLight);
     }
 
-    std::map<std::string, img::EasyImage*> allTextures = {}; //asociates a path with a pointer to an image
+    std::map<std::string, img::EasyImage* > allTextures = {}; //asociates a path with a pointer to an image
     allTextures[""] = NULL; //default
 
     for(int i = 0; i < nrFigures; i++){
@@ -69,26 +69,33 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
 
         Vector3D vec;
         std::vector<Figure3D> tempfigures = {};
+        bool wrapAroundTexture = true;
         if (type == "LineDrawing"){
             tempfigures.push_back(this->parseLinedrawing(configuration, name));
         }
         else if(type == "Cube"){
             tempfigures.push_back(this->parseCube(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
+            wrapAroundTexture = false;
         }
         else if (type == "Cuboid"){
             tempfigures.push_back(this->parseCuboid(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
+            wrapAroundTexture = false;
         }
         else if(type == "Tetrahedron"){
             tempfigures.push_back(this->parseTetrahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
+            wrapAroundTexture = false;
         }
         else if (type == "Octahedron"){
             tempfigures.push_back(this->parseOctahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
+            wrapAroundTexture = false;
         }
         else if (type == "Icosahedron"){
             tempfigures.push_back(this->parseIcosahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
+            wrapAroundTexture = false;
         }
         else if (type == "Dodecahedron"){
             tempfigures.push_back(this->parseDodecahedron(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
+            wrapAroundTexture = false;
         }
         else if (type == "Cone"){
             tempfigures.push_back(this->parseCone(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
@@ -118,25 +125,35 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         else if (type == "Train"){
             tempfigures = this->parseTrain(ambientReflection);
         }
+        else if (type == "PCC"){
+            tempfigures = this->parsePCC(ambientReflection);
+        }
+        else if (type == "Albatros"){
+            tempfigures = this->parseAlbatros(ambientReflection);
+        }
+        else if (type == "Halte"){
+            tempfigures = this->parseHalte(ambientReflection);
+        }
         else if (type == "Station"){
             tempfigures = this->parseStation(ambientReflection);
         }
-
         else if (type == "Directions"){
             tempfigures = this->parseDirections();
         }
         else if (type.substr(0,7) == "Fractal"){
-            tempfigures = this->parseFractal(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
+            tempfigures = this->parseFractal(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);\
+            wrapAroundTexture = false;
         }
         else if (type.substr(0,5) == "Thick"){
-            tempfigures = this->parseThick(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient);
+            tempfigures.push_back(this->parseThick(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
         }
         else if (type == "BuckyBall"){
             tempfigures.push_back(this->parseBuckyBall(ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
+            wrapAroundTexture = false;
         }
-
         else if (type == "MengerSponge"){
             tempfigures.push_back(this->parseMengerSponge(configuration, name, ambientReflection, diffuseReflection, specularReflection, reflectionCoefficient));
+            wrapAroundTexture = false;
         }
         img::Color col = {0,0,0};
         if (allTextures.find(texturePath) == allTextures.end()){
@@ -154,6 +171,8 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
         }
         for(Figure3D& figure: tempfigures) {
 
+            figure.wrapAroundTexture = wrapAroundTexture;
+
             figure.rainbow = rainbow;
             figure.setColor(color);
 
@@ -170,7 +189,7 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
             figure.applyTransformation(m); //rotateFigure Z-axis
 
             vec = Vector3D::vector(+CenterPoint.x, +CenterPoint.y,
-                                   +CenterPoint.z); //translate the whole Figure if the centerpoint isn't (0,0,0);
+                                   +CenterPoint.z); //translate the whole Figure if the centerpoint isn't (0,0,0)
             m = translateFigure(vec);
             figure.applyTransformation(m);
             figure.texture = allTextures[texturePath];
@@ -201,14 +220,12 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
                 }
                 double Imagex = shadowmaskSize * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
                 double Imagey = shadowmaskSize * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
-                std::cerr << "Ix: " << Imagex << std::endl << "Iy: " << Imagey << std::endl;
                 light.shadowmask = ZBuffer(Imagex, Imagey);
                 double d = 0.95 * (Imagex/(Xmax-Xmin));
                 double DCx = d * (Xmin+Xmax)/2;
                 double DCy = d * (Ymin+Ymax)/2;
                 double dx = (Imagex/2) - DCx;
                 double dy = (Imagey/2) - DCy;
-                std::cerr << "d: " << d << std::endl << "dx: " << dx << std::endl << "dy: " << dy << std::endl;
                 img::EasyImage garbageImage(Imagex, Imagey);
                 for (Figure3D& figure: figures){
                     triangulate(figure);
@@ -261,215 +278,240 @@ WireFrameParser::WireFrameParser(const ini::Configuration &configuration, unsign
             }
         }
     }
-    else if (ZBuffering == 3){
+    else if (ZBuffering == 3) {
         double Xmin = lines.front().point1.x, Xmax = lines.front().point1.x, Ymin = lines.front().point1.y, Ymax = lines.front().point1.y;
-        for(Line2D line: lines){
-            Xmin = std::min(Xmin, std::min(line.point1.x,line.point2.x));
-            Xmax = std::max(Xmax, std::max(line.point1.x,line.point2.x));
-            Ymin = std::min(Ymin, std::min(line.point1.y,line.point2.y));
-            Ymax = std::max(Ymax, std::max(line.point1.y,line.point2.y));
+        for (Line2D line: lines) {
+            Xmin = std::min(Xmin, std::min(line.point1.x, line.point2.x));
+            Xmax = std::max(Xmax, std::max(line.point1.x, line.point2.x));
+            Ymin = std::min(Ymin, std::min(line.point1.y, line.point2.y));
+            Ymax = std::max(Ymax, std::max(line.point1.y, line.point2.y));
         }
-        double Imagex = size * (Xmax-Xmin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
-        double Imagey = size * (Ymax-Ymin)/(std::max((Xmax-Xmin), (Ymax-Ymin)));
+        double Imagex = size * (Xmax - Xmin) / (std::max((Xmax - Xmin), (Ymax - Ymin)));
+        double Imagey = size * (Ymax - Ymin) / (std::max((Xmax - Xmin), (Ymax - Ymin)));
         image = img::EasyImage(roundToInt(Imagex), roundToInt(Imagey), bgcolor);
         ZBuffer buffer(roundToInt(Imagex), roundToInt(Imagey));
-        double d = 0.95 * (Imagex/ (Xmax-Xmin));
-        double DCx = d * (Xmin+Xmax)/2;
-        double DCy = d * (Ymin+Ymax)/2;
-        double dx = (Imagex/2) - DCx;
-        double dy = (Imagey/2) - DCy;
+        double d = 0.95 * (Imagex / (Xmax - Xmin));
+        double DCx = d * (Xmin + Xmax) / 2;
+        double DCy = d * (Ymin + Ymax) / 2;
+        double dx = (Imagex / 2) - DCx;
+        double dy = (Imagey / 2) - DCy;
         Matrix invEyeMatrix = Matrix::inv(getEyeMatrix(eye));
         applyTransformation(figures, invEyeMatrix);
         unsigned int rechthoeken = 0;
         unsigned int i = 0;
         std::map<unsigned int, unsigned int> trianglesToRectangles;
         std::map<unsigned int, std::vector<Vector3D> > rectangleProperties;
-        std::map<unsigned int, img::EasyImage*> rectangleTextures;
-        for(Figure3D& figure: figures){
-            unsigned int minimumRectangle = rectangleProperties.size(); //From which rectangle the program may try to optimise, by merging rectangles, by using this value, it will only optimise rectangles of the same figure
-            for(Face face : figure.getFaces()){
-                unsigned int rechthoek = 0;
-                Vector3D A = figure[face[0]];
-                Vector3D B = figure[face[1]];
-                Vector3D C = figure[face[2]];
-                Vector3D AB = B-A;
-                Vector3D AC = C-A;
-                Vector3D normal = Vector3D::normalise(Vector3D::cross(AB, AC));
-                double a1 = normal.x;
-                double b1 = normal.y;
-                double c1 = normal.z;
-                double d1 = -(a1*A.x + b1*A.y+c1*A.z);
+        std::map<unsigned int, img::EasyImage* > rectangleTextures;
+        for (Figure3D &figure: figures) {
+            if (!figure.wrapAroundTexture) {
+                unsigned int minimumRectangle = rectangleProperties.size(); //From which rectangle the program may try to optimise, by merging rectangles, by using this value, it will only optimise rectangles of the same figure
+                for (Face face : figure.getFaces()) {
+                    unsigned int rechthoek = 0;
+                    Vector3D A = figure[face[0]];
+                    Vector3D B = figure[face[1]];
+                    Vector3D C = figure[face[2]];
+                    Vector3D AB = B - A;
+                    Vector3D AC = C - A;
+                    Vector3D normal = Vector3D::normalise(Vector3D::cross(AB, AC));
+                    double a1 = normal.x;
+                    double b1 = normal.y;
+                    double c1 = normal.z;
+                    double d1 = -(a1 * A.x + b1 * A.y + c1 * A.z);
 
-                Vector3D linksonder;
-                Vector3D linksboven;
-                Vector3D rechtsonder;
-                if (face.getPointIndices().size() <= 4){
-                    Vector3D loodrechte = Vector3D::cross(normal, figure[face[1]]-figure[face[0]]);
-                    linksonder = figure[face[0]];
-                    rechtsonder = figure[face[1]];
-                    linksboven = figure[face[0]]+loodrechte;
-                }
-                else if (face.getPointIndices().size() == 5){
-                    //regelmatige vijfhoek alleen
-                    Vector3D v = figure[face[face.getPointIndices().size()-1]] - figure[face[0]];
-                    linksonder = figure[face[0]] - std::cos(18*M_PI/360)*v;
-                    rechtsonder = figure[face[0]] + (1+std::cos(18*M_PI/360))*v;
-                    Vector3D v2 = figure[face[1]] - linksonder;
-                    linksboven = linksonder + (1+std::cos(36*M_PI/360))*v2;
-                }
-                else if (face.getPointIndices().size() == 6){
-                    //regelmatige zeshoek alleen
-                    Vector3D v = figure[face[face.getPointIndices().size()-1]] - figure[face[0]];
-                    linksonder = figure[face[0]] - std::sin(60*M_PI/360)*v;
-                    rechtsonder = figure[face[0]] + (1 + std::sin(60*M_PI/360))*v;
-                    Vector3D v2 = figure[face[1]] - linksonder;
-                    linksboven  = linksonder + 2*v2;
-                }
+                    Vector3D linksonder;
+                    Vector3D linksboven;
+                    Vector3D rechtsonder;
+                    if (face.getPointIndices().size() <= 4) {
+                        Vector3D loodrechte = Vector3D::cross(normal, figure[face[1]] - figure[face[0]]);
+                        linksonder = figure[face[0]];
+                        rechtsonder = figure[face[1]];
+                        linksboven = figure[face[0]] + loodrechte;
+                    } else if (face.getPointIndices().size() == 5) {
+                        //regelmatige vijfhoek alleen
+                        Vector3D v = figure[face[face.getPointIndices().size() - 1]] - figure[face[0]];
+                        linksonder = figure[face[0]] - std::cos(18 * M_PI / 360) * v;
+                        rechtsonder = figure[face[0]] + (1 + std::cos(18 * M_PI / 360)) * v;
+                        Vector3D v2 = figure[face[1]] - linksonder;
+                        linksboven = linksonder + (1 + std::cos(36 * M_PI / 360)) * v2;
+                    } else if (face.getPointIndices().size() == 6) {
+                        //regelmatige zeshoek alleen
+                        Vector3D v = figure[face[face.getPointIndices().size() - 1]] - figure[face[0]];
+                        linksonder = figure[face[0]] - std::sin(60 * M_PI / 360) * v;
+                        rechtsonder = figure[face[0]] + (1 + std::sin(60 * M_PI / 360)) * v;
+                        Vector3D v2 = figure[face[1]] - linksonder;
+                        linksboven = linksonder + 2 * v2;
+                    }
 
-                rechthoek = rechthoeken;
-                for(int j = minimumRectangle; j <rectangleProperties.size();j++){
-                    Vector3D P2 = rectangleProperties[j][0];
-                    Vector3D A2 = rectangleProperties[j][1];
-                    Vector3D B2 = rectangleProperties[j][2];
-                    Vector3D normal1 = Vector3D::cross(A2, B2);
-                    normal1.normalise();
-                    double a2,b2,c2,d2;
-                    a2 = normal1.x;
-                    b2 = normal1.y;
-                    c2 = normal1.z;
-                    d2 = -(a2*P2.x+b2*P2.y+c2*P2.z);
-                    if (std::abs(a2-a1) <= std::pow(10,-10) && std::abs(b1-b2) <= std::pow(10,-10) && std::abs(c1-c2) <= std::pow(10,-10) && std::abs(d1-d2) <= std::pow(10,-10)){
-                        Vector3D P1 = linksonder;
-                        Vector3D A1 = rechtsonder - linksonder;
-                        Vector3D B1 = linksboven - linksonder;
-                        Vector3D P3 = P2+A2;
-                        Vector3D P4 = P2+B2;
-                        double u1,v1,u2,v2,u3,v3;
-                        if (std::abs(A1.x*B1.y-A1.y*B1.x) >= std::pow(10,-10)){
-                            double det = (A1.x*B1.y-A1.y*B1.x);
-                            u1 = (1/det)*((P2.x-P1.x)*B1.y + (P2.y-P1.y)*(-B1.x));
-                            v1 = (1/det)*((P2.x-P1.x)*(-A1.y) + (P2.y-P1.y)*A1.x);
-                            u2 = (1/det)*((P3.x-P1.x)*B1.y + (P3.y-P1.y)*(-B1.x));
-                            v2 = (1/det)*((P3.x-P1.x)*(-A1.y) + (P3.y-P1.y)*A1.x);
-                            u3 = (1/det)*((P4.x-P1.x)*B1.y + (P4.y-P1.y)*(-B1.x));
-                            v3 = (1/det)*((P4.x-P1.x)*(-A1.y) + (P4.y-P1.y)*A1.x);
-//                        std::cerr << "U1, V1: " << u << ' ' << v << std::endl;
-                        }
-                        if (std::abs(A1.y*B1.z-A1.z*B1.y) >= std::pow(10,-10)){
-                            u1 = (1/(A1.y*B1.z-A1.z*B1.y))*((P2.y-P1.y)*B1.z + (P2.z-P1.z)*(-B1.y));
-                            v1 = (1/(A1.y*B1.z-A1.z*B1.y))*((P2.y-P1.y)*(-A1.z) + (P2.z-P1.z)*A1.y);
-                            u2 = (1/(A1.y*B1.z-A1.z*B1.y))*((P3.y-P1.y)*B1.z + (P3.z-P1.z)*(-B1.y));
-                            v2 = (1/(A1.y*B1.z-A1.z*B1.y))*((P3.y-P1.y)*(-A1.z) + (P3.z-P1.z)*A1.y);
-                            u3 = (1/(A1.y*B1.z-A1.z*B1.y))*((P4.y-P1.y)*B1.z + (P4.z-P1.z)*(-B1.y));
-                            v3 = (1/(A1.y*B1.z-A1.z*B1.y))*((P4.y-P1.y)*(-A1.z) + (P4.z-P1.z)*A1.y);
-//                        std::cerr << "U2, V2: " << u << ' ' << v << std::endl;
-                        }
-                        if (std::abs(A1.x*B1.z-A1.z*B1.x) >= std::pow(10,-10)){
-                            u1 = (1/(A1.x*B1.z-A1.z*B1.x))*((P2.x-P1.x)*B1.z + (P2.z-P1.z)*(-B1.x));
-                            v1 = (1/(A1.x*B1.z-A1.z*B1.x))*((P2.x-P1.x)*(-A1.z) + (P2.z-P1.z)*A1.x);
-                            u2 = (1/(A1.x*B1.z-A1.z*B1.x))*((P3.x-P1.x)*B1.z + (P3.z-P1.z)*(-B1.x));
-                            v2 = (1/(A1.x*B1.z-A1.z*B1.x))*((P3.x-P1.x)*(-A1.z) + (P3.z-P1.z)*A1.x);
-                            u3 = (1/(A1.x*B1.z-A1.z*B1.x))*((P4.x-P1.x)*B1.z + (P4.z-P1.z)*(-B1.x));
-                            v3 = (1/(A1.x*B1.z-A1.z*B1.x))*((P4.x-P1.x)*(-A1.z) + (P4.z-P1.z)*A1.x);
-//                        std::cerr << "U3, V3: " << u << ' ' << v << std::endl;
-                        }
+                    rechthoek = rechthoeken;
+                    for (int j = minimumRectangle; j < rectangleProperties.size(); j++) {
+                        Vector3D P2 = rectangleProperties[j][0];
+                        Vector3D A2 = rectangleProperties[j][1];
+                        Vector3D B2 = rectangleProperties[j][2];
+                        Vector3D normal1 = Vector3D::cross(A2, B2);
+                        normal1.normalise();
+                        double a2, b2, c2, d2;
+                        a2 = normal1.x;
+                        b2 = normal1.y;
+                        c2 = normal1.z;
+                        d2 = -(a2 * P2.x + b2 * P2.y + c2 * P2.z);
+                        if (std::abs(a2 - a1) <= std::pow(10, -10) && std::abs(b1 - b2) <= std::pow(10, -10) &&
+                            std::abs(c1 - c2) <= std::pow(10, -10) &&
+                            std::abs(d1 - d2) <= std::pow(10, -10)) { //zelfde cartesische vergelijking, dus zelfde vlak
+                            Vector3D P1 = linksonder;
+                            Vector3D A1 = rechtsonder - linksonder;
+                            Vector3D B1 = linksboven - linksonder;
+                            Vector3D P3 = P2 + A2;
+                            Vector3D P4 = P2 + B2;
+                            double u1, v1, u2, v2, u3, v3;
+                            if (std::abs(A1.x * B1.y - A1.y * B1.x) >= std::pow(10, -10)) {
+                                double det = (A1.x * B1.y - A1.y * B1.x);
+                                u1 = (1 / det) * ((P2.x - P1.x) * B1.y + (P2.y - P1.y) * (-B1.x));
+                                v1 = (1 / det) * ((P2.x - P1.x) * (-A1.y) + (P2.y - P1.y) * A1.x);
+                                u2 = (1 / det) * ((P3.x - P1.x) * B1.y + (P3.y - P1.y) * (-B1.x));
+                                v2 = (1 / det) * ((P3.x - P1.x) * (-A1.y) + (P3.y - P1.y) * A1.x);
+                                u3 = (1 / det) * ((P4.x - P1.x) * B1.y + (P4.y - P1.y) * (-B1.x));
+                                v3 = (1 / det) * ((P4.x - P1.x) * (-A1.y) + (P4.y - P1.y) * A1.x);
+                            } else if (std::abs(A1.y * B1.z - A1.z * B1.y) >= std::pow(10, -10)) {
+                                u1 = (1 / (A1.y * B1.z - A1.z * B1.y)) *
+                                     ((P2.y - P1.y) * B1.z + (P2.z - P1.z) * (-B1.y));
+                                v1 = (1 / (A1.y * B1.z - A1.z * B1.y)) *
+                                     ((P2.y - P1.y) * (-A1.z) + (P2.z - P1.z) * A1.y);
+                                u2 = (1 / (A1.y * B1.z - A1.z * B1.y)) *
+                                     ((P3.y - P1.y) * B1.z + (P3.z - P1.z) * (-B1.y));
+                                v2 = (1 / (A1.y * B1.z - A1.z * B1.y)) *
+                                     ((P3.y - P1.y) * (-A1.z) + (P3.z - P1.z) * A1.y);
+                                u3 = (1 / (A1.y * B1.z - A1.z * B1.y)) *
+                                     ((P4.y - P1.y) * B1.z + (P4.z - P1.z) * (-B1.y));
+                                v3 = (1 / (A1.y * B1.z - A1.z * B1.y)) *
+                                     ((P4.y - P1.y) * (-A1.z) + (P4.z - P1.z) * A1.y);
+                            } else if (std::abs(A1.x * B1.z - A1.z * B1.x) >= std::pow(10, -10)) {
+                                u1 = (1 / (A1.x * B1.z - A1.z * B1.x)) *
+                                     ((P2.x - P1.x) * B1.z + (P2.z - P1.z) * (-B1.x));
+                                v1 = (1 / (A1.x * B1.z - A1.z * B1.x)) *
+                                     ((P2.x - P1.x) * (-A1.z) + (P2.z - P1.z) * A1.x);
+                                u2 = (1 / (A1.x * B1.z - A1.z * B1.x)) *
+                                     ((P3.x - P1.x) * B1.z + (P3.z - P1.z) * (-B1.x));
+                                v2 = (1 / (A1.x * B1.z - A1.z * B1.x)) *
+                                     ((P3.x - P1.x) * (-A1.z) + (P3.z - P1.z) * A1.x);
+                                u3 = (1 / (A1.x * B1.z - A1.z * B1.x)) *
+                                     ((P4.x - P1.x) * B1.z + (P4.z - P1.z) * (-B1.x));
+                                v3 = (1 / (A1.x * B1.z - A1.z * B1.x)) *
+                                     ((P4.x - P1.x) * (-A1.z) + (P4.z - P1.z) * A1.x);
+                            } else {
+                                continue;
+                            }
 
-//                        std::cerr << rectangleProperties[j][0] << std::endl;
-//                        std::cerr << rectangleProperties[j][1] << std::endl;
-//                        std::cerr << rectangleProperties[j][2] << std::endl;
-                        if (u1 < 0 && v1 < 0){
-                            rectangleProperties[j][0] = P2;
-                            if (u2 > 1) {
-                                rectangleProperties[j][1] = (P1 + u2 * A1 + v2*B1) - rectangleProperties[j][0];
+                            if (u1 < 0 && v1 < 0) {
+                                rectangleProperties[j][0] = P2;
+                                if (u2 > 1) {
+                                    rectangleProperties[j][1] = (P1 + u2 * A1 + v2 * B1) - rectangleProperties[j][0];
+                                } else {
+                                    rectangleProperties[j][1] = (P1 + A1 + v2 * B1) - rectangleProperties[j][0];
+                                }
+                                if (v3 > 1) {
+                                    rectangleProperties[j][2] = (P1 + u3 * A1 + v3 * B1) - rectangleProperties[j][0];
+                                } else {
+                                    rectangleProperties[j][2] = (P1 + u3 * A1 + B1) - rectangleProperties[j][0];
+                                }
+                            } else if (u1 >= 0 && v1 < 0) {
+                                rectangleProperties[j][0] = P1 + v1 * B1;
+                                if (u2 > 1) {
+                                    rectangleProperties[j][1] = (P1 + u2 * A1 + v2 * B1) - rectangleProperties[j][0];
+                                } else {
+                                    rectangleProperties[j][1] = (P1 + A1 + v2 * B1) - rectangleProperties[j][0];
+                                }
+                                if (v3 > 1) {
+                                    rectangleProperties[j][2] = (P1 + v3 * B1) - rectangleProperties[j][0];
+                                } else {
+                                    rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
+                                }
+                            } else if (u1 < 0 && v1 >= 0) {
+                                rectangleProperties[j][0] = P1 + u1 * A1;
+                                if (u2 > 1) {
+                                    rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
+                                } else {
+                                    rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
+                                }
+                                if (v3 > 1) {
+                                    rectangleProperties[j][2] = (P1 + u3 * A1 + v3 * B1) - rectangleProperties[j][0];
+                                } else {
+                                    rectangleProperties[j][2] = (P1 + u3 * A1 + B1) - rectangleProperties[j][0];
+                                }
+                            } else if (u1 >= 0 && v1 >= 0) {
+                                rectangleProperties[j][0] = P1;
+                                if (u2 > 1) {
+                                    rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
+                                } else {
+                                    rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
+                                }
+                                if (v3 > 1) {
+                                    rectangleProperties[j][2] = (P1 + v3 * B1) - rectangleProperties[j][0];
+                                } else {
+                                    rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
+                                }
                             }
-                            else{
-                                rectangleProperties[j][1] = (P1 + A1 + v2*B1) - rectangleProperties[j][0];
-                            }
-                            if (v3 > 1){
-                                rectangleProperties[j][2] = (P1 + u3*A1 + v3*B1) - rectangleProperties[j][0];
-                            }
-                            else{
-                                rectangleProperties[j][2] = (P1 + u3*A1 + B1) - rectangleProperties[j][0];
-                            }
-                        }
-                        else if (u1 >= 0 && v1 < 0){
-                            rectangleProperties[j][0] = P1  + v1*B1;
-                            if (u2 > 1) {
-                                rectangleProperties[j][1] = (P1 + u2 * A1 + v2*B1) - rectangleProperties[j][0];
-                            }
-                            else{
-                                rectangleProperties[j][1] = (P1 + A1 + v2*B1) - rectangleProperties[j][0];
-                            }
-                            if (v3 > 1){
-                                rectangleProperties[j][2] = (P1 + v3*B1) - rectangleProperties[j][0];
-                            }
-                            else{
-                                rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
-                            }
-                        }
-                        else if (u1 < 0 && v1 >= 0){
-                            rectangleProperties[j][0] = P1 + u1*A1 ;
-                            if (u2 > 1) {
-                                rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
-                            }
-                            else{
-                                rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
-                            }
-                            if (v3 > 1){
-                                rectangleProperties[j][2] = (P1 + u3*A1 + v3*B1) - rectangleProperties[j][0];
-                            }
-                            else{
-                                rectangleProperties[j][2] = (P1 + u3*A1 + B1) - rectangleProperties[j][0];
-                            }
-                        }
-                        else if (u1 >= 0 && v1 >= 0){
-                            rectangleProperties[j][0] = P1;
-                            if (u2 > 1) {
-                                rectangleProperties[j][1] = (P1 + u2 * A1) - rectangleProperties[j][0];
-                            }
-                            else{
-                                rectangleProperties[j][1] = (P1 + A1) - rectangleProperties[j][0];
-                            }
-                            if (v3 > 1){
-                                rectangleProperties[j][2] = (P1 + v3*B1) - rectangleProperties[j][0];
-                            }
-                            else{
-                                rectangleProperties[j][2] = (P1 + B1) - rectangleProperties[j][0];
-                            }
-                        }
 
-                        rechthoek = j;
-                        break;
+                            rechthoek = j;
+                            break;
 
+                        }
+                    }
+                    for (int j = 2; j <
+                                    face.getPointIndices().size(); j++) { //met het trianguleren wordt een face met n hoekpunten opgesplitst in n-2 driehoeken
+                        trianglesToRectangles[i] = rechthoek;
+                        i++;
+                    }
+                    if (rechthoek == rechthoeken) { //nieuwe rechthoek aanmaken
+                        rectangleProperties[rechthoeken] = {linksonder, rechtsonder - linksonder,
+                                                            linksboven - linksonder};
+                        rectangleTextures[rechthoeken] = figure.texture;
+                        rechthoeken++;
                     }
                 }
-                for(int j = 2; j < face.getPointIndices().size(); j++){ //met het trianguleren wordt een face met n hoekpunten opgesplitst in n-2 driehoeken
-                    trianglesToRectangles[i] = rechthoek;
-                    i++;
+                applyTransformation(figures, eyeMatrix);
+                int triangle = 0;
+                for (Figure3D &figure: figures) {
+                    triangulate(figure);
+                    for (const Face &face : figure.getFaces()) {
+                        Vector3D pointA = figure[face[0]];
+                        Vector3D pointB = figure[face[1]];
+                        Vector3D pointC = figure[face[2]];
+                        unsigned int rectangle = trianglesToRectangles[triangle];
+                        std::vector<Vector3D> rectangleProps = rectangleProperties[rectangle];
+                        draw_textured_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy,
+                                               rectangleProps, figure.texture, eye);
+                        triangle++;
+                    }
                 }
-//                std::cerr << linksonder << ' ' << rechtsonder-linksonder << ' ' << linksboven - linksonder << std::endl;
-
-
-                if (rechthoek == rechthoeken) {
-                    rectangleProperties[rechthoeken] = {linksonder, rechtsonder-linksonder, linksboven-linksonder};
-                    rectangleTextures[rechthoeken] = figure.texture;
-                    rechthoeken++;
+            } else { //WRAP-AROUND texture
+                for (Figure3D &figure : figures) {
+                    double Xmin, Xmax, Zmin, Zmax;
+                    Xmin = figure[0].x;
+                    Xmax = figure[0].x;
+                    Zmin = figure[0].z;
+                    Zmax = figure[0].z;
+                    for (const Vector3D &point : figure.getPoints()) {
+                        Xmin = std::min(Xmin, point.x);
+                        Xmax = std::max(Xmax, point.x);
+                        Zmin = std::min(Zmin, point.z);
+                        Zmax = std::max(Xmax, point.z);
+                    }
+                    double length = (eye - figure.getCenter()).length();
+                    Vector3D A = Vector3D::vector(Xmax - Xmin, 0, 0);
+                    Vector3D B = Vector3D::vector(0, 0, Zmax - Zmin);
+                    Vector3D P = Vector3D::point(-(Xmax - Xmin) / 2, eye.y, -(Zmax - Zmin) / 2);
+                    Vector3D C = Vector3D::cross(A, B);
+                    figure.applyTransformation(eyeMatrix);
+                    triangulate(figure);
+                    for (const Face &face : figure.getFaces()) {
+                        Vector3D pointA = figure[face[0]];
+                        Vector3D pointB = figure[face[1]];
+                        Vector3D pointC = figure[face[2]];
+                        std::vector<Vector3D> rectangleProps = {P, A, B, C};
+                        draw_textured_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy, rectangleProps,
+                                               figure.texture, eye, true);
+                    }
                 }
-            }
-        }
-        applyTransformation(figures, eyeMatrix);
-        int triangle = 0;
-        for (Figure3D& figure: figures){
-            triangulate(figure);
-            for(const Face& face : figure.getFaces()){
-                Vector3D pointA = figure[face[0]];
-                Vector3D pointB = figure[face[1]];
-                Vector3D pointC = figure[face[2]];
-                unsigned int rectangle = trianglesToRectangles[triangle];
-                std::vector<Vector3D > rectangleProps = rectangleProperties[rectangle];
-                draw_textured_triangle(buffer, image, pointA, pointB, pointC, d, dx, dy,
-                                       rectangleProps, figure.texture, eye);
-                triangle++;
             }
         }
     }
@@ -1047,20 +1089,13 @@ std::vector<Figure3D> WireFrameParser::parseRail() {
     Figures3D figures = {};
     Color colGray = Color(0.5,0.5,0.5);
     Color colBrown = Color(0.5,0.22,0);
-    figures.push_back(this->drawCylinder(20, 50, colGray, colGray, colGray, 20, true, Vector3D::point(-8, 0, 0)));
-    figures.push_back(this->drawCylinder(20, 50, colGray, colGray, colGray, 20, true, Vector3D::point(8, 0, 0)));
-    figures.push_back(
-            this->drawCuboid(0.5, 16, 2, colBrown, colBrown, colBrown, 5, Vector3D::point(0, 0, 2),
-                             Vector3D::vector(0, 0, toRadial(90))));
-    figures.push_back(
-            this->drawCuboid(0.5, 16, 2, colBrown, colBrown, colBrown, 5, Vector3D::point(0, 0, 7),
-                             Vector3D::vector(0, 0, toRadial(90))));
-    figures.push_back(
-            this->drawCuboid(0.5, 16, 2, colBrown, colBrown, colBrown, 5, Vector3D::point(0, 0, 12),
-                             Vector3D::vector(0, 0, toRadial(90))));
-    figures.push_back(
-            this->drawCuboid(0.5, 16, 2, colBrown, colBrown, colBrown, 5, Vector3D::point(0, 0, 17),
-                             Vector3D::vector(0, 0, toRadial(90))));
+    figures.push_back(this->drawCylinder(50, 50, colGray, colGray, colGray, 20, true, Vector3D::point(0, 0, -3.5), Vector3D::vector(0,toRadial(90),0), 0.5));
+    figures.push_back(this->drawCylinder(50, 50, colGray, colGray, colGray, 20, true, Vector3D::point(0, 0, 3.5), Vector3D::vector(0, toRadial(90),0), 0.5));
+    figures.push_back(this->drawCuboid(2, 0.5, 7, colBrown, colBrown, colBrown, 5, Vector3D::point(3, 0, 0)));
+    figures.push_back(this->drawCuboid(2, 0.5, 7, colBrown, colBrown, colBrown, 5, Vector3D::point(8, 0, 0)));
+    figures.push_back(this->drawCuboid(2, 0.5, 7, colBrown, colBrown, colBrown, 5, Vector3D::point(13, 0, 0)));
+    figures.push_back(this->drawCuboid(2, 0.5, 7, colBrown, colBrown, colBrown, 5, Vector3D::point(18, 0, 0)));
+    figures.push_back(this->drawCuboid(2, 0.5, 7, colBrown, colBrown, colBrown, 5, Vector3D::point(23, 0, 0)));
     return figures;
 }
 
@@ -1089,13 +1124,167 @@ std::vector<Figure3D> WireFrameParser::parseTrain(Color baseColor) {
     return figures;
 }
 
+std::vector<Figure3D> WireFrameParser::parsePCC(Color baseColor) {
+    /**
+     * DIMENSIONS:
+     * X : 30
+     * Y : 10
+     * Z : 10
+     *
+     * Center: (0,0,5)
+     * */
+
+    Figures3D figures = {};
+
+    //Chassis
+    figures.push_back(drawCuboid(20,10,10,baseColor, baseColor, baseColor, 10,Vector3D::point(15,7,0)));
+    figures.push_back(drawCylinder(2,20,baseColor, baseColor, baseColor, 10,true, Vector3D::point(5,2,0), Vector3D::vector(toRadial(-90), 0, 0),5));
+    figures.push_back(drawCylinder(2,20,baseColor, baseColor, baseColor, 10,true, Vector3D::point(25,2,0), Vector3D::vector(toRadial(-90), 0, 0),5));
+
+    //Ramen
+    figures.push_back(drawCuboid(3,5,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(22.5,8.5,5)));
+    figures.push_back(drawCuboid(3,5,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(18,8.5,5)));
+    figures.push_back(drawCuboid(3,5,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(12,8.5,5)));
+    figures.push_back(drawCuboid(3,5,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(7.5,8.5,5)));
+
+    //Ramen aan andere kant
+    figures.push_back(drawCuboid(3,5,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(22.5,8.5,-5)));
+    figures.push_back(drawCuboid(3,5,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(18,8.5,-5)));
+    figures.push_back(drawCuboid(3,5,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(12,8.5,-5)));
+    figures.push_back(drawCuboid(3,5,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(7.5,8.5,-5)));
+
+    //ramen voor en achteraan
+    figures.push_back(drawCylinder(0.99, 20, Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, true, Vector3D::point(5,6,0), Vector3D::vector(toRadial(-90),0,0),5.01));
+    figures.push_back(drawCylinder(0.99, 20, Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, true, Vector3D::point(25,6,0), Vector3D::vector(toRadial(-90),0,0),5.01));
+
+    //Wielen
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(5,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(10,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(15,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(20,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(25,2,4), Vector3D::vector(0,0,0), 2));
+
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(5,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(10,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(15,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(20,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(25,2,-4), Vector3D::vector(0,0,0), 2));
+
+    return figures;
+}
+
+std::vector<Figure3D> WireFrameParser::parseAlbatros(Color baseColor) {
+    Figures3D figures = {};
+    /**
+     * DIMENSIONS:
+     * X : 50
+     * Y : 10
+     * Z : 10
+     *
+     * Center (0,0,5)
+     * */
+
+
+    figures.push_back(drawCuboid(45, 10, 10, baseColor, baseColor, baseColor, 10, Vector3D::point(25, 7, 0)));
+    for(int i = 1 ; i >= -1; i-=2) {
+        std::vector<Vector3D> points = {Vector3D::point(22.5*i+25, 12, -5), Vector3D::point(22.5*i+25, 12, 5),
+                                        Vector3D::point(25*i+25, 6, -5), Vector3D::point(25*i+25, 6, 5),
+                                        Vector3D::point(25*i+25, 4, -5), Vector3D::point(25*i+25, 4, 5),
+                                        Vector3D::point(22.5*i+25, 2, -5), Vector3D::point(22.5*i+25, 2, 5)};
+
+        std::vector<Face> faces;
+        if (i == 1)
+            faces = {Face({0, 2, 4, 6}), Face({1, 3, 5, 7}), Face({3, 2, 0, 1}), Face({2, 3, 5, 4}), Face({4,5,7,6})};
+        else
+            faces = {Face({6,4,2,0}), Face({7,5,3,1}), Face({1,0,2,3}), Face({4,5,3,2}), Face({6,7,5,4})};
+        figures.push_back(Figure3D(faces, points, img::Color(0, 0, 0)));
+        figures.back().setAmbientReflection(baseColor);
+        figures.back().setDiffuseReflection(baseColor);
+        figures.back().setSpecularReflection(baseColor);
+        figures.back().setReflectionCoefficient(10);
+    }
+
+    //windows
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(9,8,-5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(14,8,-5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(19,8,-5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(25,8,-5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(31,8,-5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(36,8,-5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(41,8,-5)));
+
+    //more windows
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(9,8,5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(14,8,5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(19,8,5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(25,8,5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(31,8,5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(36,8,5)));
+    figures.push_back(drawCuboid(4,4,0.1,Color(0.5,1,1), Color(0.5,1,1), Color(0.5,1,1), 20, Vector3D::point(41,8,5)));
+
+
+    //front and back windows
+    for(int i = 1 ; i >= -1; i-=2) {
+        std::vector<Vector3D> points = {Vector3D::point(21.5*i+25, 10, -5.01), Vector3D::point(21.5*i+25, 10, 5.01),
+                                        Vector3D::point(23.4*i+25, 10, -5.01), Vector3D::point(23.4*i+25,10, 5.01),
+                                        Vector3D::point(25.1*i+25, 6, -5.01), Vector3D::point(25.1*i+25, 6, 5.01),
+                                        Vector3D::point(21.5*i+25, 6, -5.01), Vector3D::point(21.5*i+25, 6, 5.01)};
+
+        std::vector<Face> faces;
+        if (i == 1)
+            faces = {Face({0, 2, 4,6}), Face({1, 3, 5, 7}), Face({5, 4, 2, 3})};
+        else
+            faces = {Face({6, 4, 2, 0}), Face({7, 5,3,1}), Face({3, 2, 4, 5})};
+        figures.push_back(Figure3D(faces, points, img::Color(0, 0, 0)));
+        figures.back().setAmbientReflection(Color(0.5,1,1));
+        figures.back().setDiffuseReflection(Color(0.5,1,1));
+        figures.back().setSpecularReflection(Color(0.5,1,1));
+        figures.back().setReflectionCoefficient(10);
+    }
+
+    //Wielen
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(44,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(44,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(40,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(40,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(36,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(36,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(32,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(32,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(28,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(28,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(22,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(22,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(18,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(18,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(14,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(14,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(10,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(10,2,-4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(6,2,4), Vector3D::vector(0,0,0), 2));
+    figures.push_back(drawCylinder(0.5, 10, Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), Color(0.8,0.8,0.8), 25, true, Vector3D::point(6,2,-4), Vector3D::vector(0,0,0), 2));
+
+    return figures;
+}
+
+std::vector<Figure3D> WireFrameParser::parseHalte(Color baseColor) {
+    Figures3D figures;
+    figures.push_back(drawCuboid(6,1,6, Color(0.7,0.7,0.7), Color(0.7,0.7,0.7), Color(0.7,0.7,0.7), 20));
+    figures.push_back(drawCylinder(20,20, Color(0.7,0.7,0.7), Color(0.7,0.7,0.7), Color(0.7,0.7,0.7), 20, true, Vector3D::point(0,0,0), Vector3D::vector(toRadial(-90),0,0)));
+    figures.push_back(drawCuboid(6,8, 3, baseColor, baseColor, baseColor, 10, Vector3D::point(0,16,0)));
+    return figures;
+
+}
+
 std::vector<Figure3D> WireFrameParser::parseStation(Color baseColor) {
     Figures3D figures = {};
     Color colDKGray = Color(0.42,0.42,0.42);
-    figures.push_back(this->drawCuboid(25, 20, 12, baseColor, baseColor, baseColor, 5, Vector3D::point(12.5,10,4)));
-    figures.push_back(this->drawCuboid(25 ,1,20, colDKGray, colDKGray, colDKGray, 20, Vector3D::point(12.5,20.5,0)));
-    figures.push_back(this->drawCylinder(20,20, colDKGray, colDKGray, colDKGray, 20, true, Vector3D::point(1,0,-9), Vector3D::vector(toRadial(-90),0, 0)));
-    figures.push_back(this->drawCylinder(20,20, colDKGray, colDKGray, colDKGray, 20, true, Vector3D::point(24,0,-9), Vector3D::vector(toRadial(-90),0, 0)));
+    figures.push_back(this->drawCuboid(50, 15, 1, baseColor, baseColor, baseColor, 5, Vector3D::point(25,7.5,18.5)));
+    figures.push_back(this->drawCuboid(1, 15, 19, baseColor, baseColor, baseColor, 5, Vector3D::point(49.5,7.5,9.5)));
+    figures.push_back(this->drawCuboid(1, 15, 19, baseColor, baseColor, baseColor, 5, Vector3D::point(0.5,7.5,9.5)));
+    figures.push_back(this->drawCuboid(50 ,1,20, colDKGray, colDKGray, colDKGray, 20, Vector3D::point(25,15.5,9)));
+    figures.push_back(this->drawCylinder(15,20, colDKGray, colDKGray, colDKGray, 20, true, Vector3D::point(1,0,0), Vector3D::vector(toRadial(-90),0, 0)));
+    figures.push_back(this->drawCylinder(15,20, colDKGray, colDKGray, colDKGray, 20, true, Vector3D::point(49,0,0), Vector3D::vector(toRadial(-90),0, 0)));
     return figures;
 }
 
@@ -1336,7 +1525,7 @@ void WireFrameParser::rearrangeTriangles(std::vector<Face> &triangles, std::vect
     triangles = newTriangles;
 }
 
-Figures3D
+Figure3D
 WireFrameParser::parseThick(const ini::Configuration &configuration, std::string &name, Color ambientReflection,
                             Color diffuseReflection, Color specularReflection, unsigned int reflectionCoefficient) {
     std::vector<std::string> supportedtypes = {"Cube", "Dodecahedron", "Icosahedron", "Octahedron", "Tetrahedron", "BuckyBall", "3DLSystem", "LineDrawing"};
@@ -1383,7 +1572,7 @@ WireFrameParser::parseThick(const ini::Configuration &configuration, std::string
     return makeThicc(figure, radius, n, m);
 }
 
-Figures3D WireFrameParser::makeThicc(Figure3D &figure, const double radius, const int n, const int m) {
+Figure3D WireFrameParser::makeThicc(Figure3D &figure, const double radius, const int n, const int m) {
     Figures3D figures;
     for(Vector3D point : figure.getPoints()){
         figures.push_back(this->drawSphere(m, figure.getAmbientReflection(), figure.getDiffuseReflection(), figure.getSpecularReflection(), figure.getReflectionCoefficient(), point , Vector3D::vector(0,0,0), radius));
@@ -1401,9 +1590,8 @@ Figures3D WireFrameParser::makeThicc(Figure3D &figure, const double radius, cons
             figures.push_back(this->drawCylinder(height, n, figure.getAmbientReflection(), figure.getDiffuseReflection(), figure.getSpecularReflection(), figure.getReflectionCoefficient(),false, p1, Vector3D::vector(0,phi,theta), radius));
         }
     }
-    return figures;
+    return mergeFigures(figures);
 }
-
 
 
 
